@@ -80,33 +80,41 @@
 
 /* Glass effects */
 .glass {
-  @apply backdrop-blur-md bg-white/10 border border-white/20;
+  @apply backdrop-blur-xl bg-white/5 border border-white/20 shadow-lg;
 }
 
 .glass-card {
-  @apply bg-white/80 backdrop-blur-md shadow-lg border border-white/20;
+  @apply bg-white/80 backdrop-blur-md shadow-lg border border-white/20 rounded-3xl;
 }
 
 .glass-dark {
-  @apply backdrop-blur-md bg-black/10 border border-white/10;
+  @apply backdrop-blur-xl bg-black/20 border border-white/10;
 }
 
 .hero-gradient {
-  background: linear-gradient(to right, rgba(0, 112, 169, 0.9), rgba(20, 52, 164, 0.8));
+  background: linear-gradient(to right, rgba(0, 112, 169, 0.8), rgba(20, 52, 164, 0.7));
 }
 
 .section-padding {
-  @apply py-12 md:py-20;
+  @apply py-16 md:py-24;
 }
 
 /* Modern animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.7s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
 }
 
 @keyframes scaleIn {
@@ -115,14 +123,54 @@
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.3s ease-out forwards;
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
 }
 
 /* Card hover effects */
 .hover-lift {
-  @apply transition-all duration-300 hover:translate-y-[-5px] hover:shadow-lg;
+  @apply transition-all duration-300 hover:translate-y-[-8px] hover:shadow-xl;
 }
 
 .tag {
   @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary;
+}
+
+/* Button effects */
+.btn-glow {
+  @apply relative overflow-hidden;
+}
+
+.btn-glow::after {
+  @apply absolute inset-0 rounded-full;
+  content: '';
+  background: linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  transform: rotate(45deg) translate(0, 100%);
+  animation: glow 6s infinite linear;
+}
+
+@keyframes glow {
+  0% {
+    transform: rotate(45deg) translate(0, 100%);
+  }
+  100% {
+    transform: rotate(45deg) translate(0, -100%);
+  }
+}
+
+/* Text animations */
+.text-reveal {
+  mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent 100%);
 }
