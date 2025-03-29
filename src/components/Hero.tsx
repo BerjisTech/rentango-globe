@@ -1,29 +1,21 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Car, Home, MapPin, Search } from "lucide-react";
-
 const Hero = () => {
   const navigate = useNavigate();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchType, setSearchType] = useState("short-term");
-
   const handleSearch = () => {
     navigate(`/properties?type=${searchType}&location=${encodeURIComponent(searchLocation)}`);
   };
-
-  return (
-    <div className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+  return <div className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={{ 
-          backgroundImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')",
-        }}
-      >
+      <div className="absolute inset-0 z-0 bg-cover bg-center" style={{
+      backgroundImage: "url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')"
+    }}>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
       </div>
 
@@ -62,17 +54,8 @@ const Hero = () => {
               <div className="relative">
                 <div className="relative flex items-center overflow-hidden rounded-2xl">
                   <MapPin className="absolute left-4 text-gray-400" size={20} />
-                  <Input
-                    type="text"
-                    placeholder="Where are you going?"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    className="w-full pl-12 pr-24 bg-white/95 backdrop-blur-sm border-0 shadow-sm h-14 rounded-2xl"
-                  />
-                  <Button 
-                    onClick={handleSearch} 
-                    className="absolute right-1 top-1 rounded-xl h-12 px-5"
-                  >
+                  <Input type="text" placeholder="Where are you going?" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} className="w-full pl-12 pr-24 bg-white/95 backdrop-blur-sm border-0 shadow-sm h-14 rounded-2xl" />
+                  <Button onClick={handleSearch} className="absolute right-1 top-1 rounded-xl h-12 px-5 bg-white/30 backdrop-blur-md text-indigo-500">
                     <Search className="h-4 w-4 mr-2" />
                     Search
                   </Button>
@@ -97,8 +80,6 @@ const Hero = () => {
           </Tabs>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Hero;
