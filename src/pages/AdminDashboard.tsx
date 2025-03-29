@@ -29,149 +29,198 @@ import {
   Settings,
   Search,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  ChevronLeft,
+  Menu,
+  LayoutDashboard,
+  Flag 
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 flex-1">
-        <div className="mb-6 flex items-center">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white mr-3">
-            <Shield className="h-5 w-5" />
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary mr-3">
+              <Shield className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage all platform activities and users</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage all platform activities and users</p>
-          </div>
+          <Button variant="outline" className="hidden md:flex rounded-full" onClick={toggleSidebar}>
+            {sidebarCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <span className="ml-2">{sidebarCollapsed ? "Expand" : "Collapse"} Sidebar</span>
+          </Button>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Admin Panel</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <nav className="flex flex-col">
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "overview" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("overview")}
-                  >
-                    <BarChart className="h-5 w-5" />
-                    <span>Dashboard</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "users" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("users")}
-                  >
-                    <Users className="h-5 w-5" />
-                    <span>Users</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "properties" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("properties")}
-                  >
-                    <House className="h-5 w-5" />
-                    <span>Properties</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "transportation" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("transportation")}
-                  >
-                    <Car className="h-5 w-5" />
-                    <span>Transportation</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "bookings" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("bookings")}
-                  >
-                    <DollarSign className="h-5 w-5" />
-                    <span>Bookings & Payments</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "reports" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("reports")}
-                  >
-                    <AlertTriangle className="h-5 w-5" />
-                    <span>Reports</span>
-                  </button>
-                  <button 
-                    className={`flex items-center gap-3 p-4 text-left hover:bg-gray-100 transition-colors ${activeTab === "settings" ? "bg-primary/5 border-l-4 border-primary font-medium" : ""}`}
-                    onClick={() => setActiveTab("settings")}
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span>Settings</span>
-                  </button>
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Responsive Sidebar */}
+          <Collapsible 
+            open={!sidebarCollapsed} 
+            onOpenChange={(open) => setSidebarCollapsed(!open)}
+            className={cn(
+              "lg:col-span-1",
+              sidebarCollapsed && "lg:col-span-0"
+            )}
+          >
+            <div className="block lg:hidden mb-4">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span>Dashboard Navigation</span>
+                  <ChevronLeft className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    !sidebarCollapsed && "rotate-90"
+                  )} />
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            <CollapsibleContent className="lg:block">
+              <Card className="glass-card border-0 shadow-lg">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg">Admin Panel</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <nav className="flex flex-col">
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "overview" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("overview")}
+                    >
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Dashboard</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "users" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("users")}
+                    >
+                      <Users className="h-5 w-5" />
+                      <span>Users</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "properties" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("properties")}
+                    >
+                      <House className="h-5 w-5" />
+                      <span>Properties</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "transportation" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("transportation")}
+                    >
+                      <Car className="h-5 w-5" />
+                      <span>Transportation</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "bookings" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("bookings")}
+                    >
+                      <DollarSign className="h-5 w-5" />
+                      <span>Bookings & Payments</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "reports" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("reports")}
+                    >
+                      <Flag className="h-5 w-5" />
+                      <span>Reports</span>
+                    </button>
+                    <button 
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "settings" ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab("settings")}
+                    >
+                      <Settings className="h-5 w-5" />
+                      <span>Settings</span>
+                    </button>
+                  </nav>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
           
           {/* Main Content */}
-          <div className="lg:col-span-4">
+          <div className={cn(
+            "transition-all duration-300",
+            sidebarCollapsed ? "lg:col-span-5" : "lg:col-span-4"
+          )}>
             {activeTab === "overview" && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card className="bg-white">
+                  <Card className="glass-card border-0 shadow-lg">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center">
-                        <Users className="h-5 w-5 text-primary mr-2" />
+                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                          <Users className="h-5 w-5" />
+                        </div>
                         <div className="text-2xl font-bold">1,248</div>
                       </div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-white">
+                  <Card className="glass-card border-0 shadow-lg">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Properties Listed</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center">
-                        <House className="h-5 w-5 text-primary mr-2" />
+                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                          <House className="h-5 w-5" />
+                        </div>
                         <div className="text-2xl font-bold">542</div>
                       </div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-white">
+                  <Card className="glass-card border-0 shadow-lg">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Vehicles Listed</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center">
-                        <Car className="h-5 w-5 text-primary mr-2" />
+                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                          <Car className="h-5 w-5" />
+                        </div>
                         <div className="text-2xl font-bold">178</div>
                       </div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-white">
+                  <Card className="glass-card border-0 shadow-lg">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center">
-                        <DollarSign className="h-5 w-5 text-primary mr-2" />
+                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                          <DollarSign className="h-5 w-5" />
+                        </div>
                         <div className="text-2xl font-bold">Ksh 9.4M</div>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
                 
-                <Card className="bg-white">
+                <Card className="glass-card border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle>Recent Activities</CardTitle>
                     <CardDescription>
@@ -195,12 +244,12 @@ const AdminDashboard = () => {
                           <TableCell>New Property Listed</TableCell>
                           <TableCell>John Doe</TableCell>
                           <TableCell>
-                            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-amber-100 text-amber-700">
                               Pending Approval
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Review</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Review</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
@@ -208,12 +257,12 @@ const AdminDashboard = () => {
                           <TableCell>Booking Completed</TableCell>
                           <TableCell>Jane Smith</TableCell>
                           <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-green-100 text-green-700">
                               Completed
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">View</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">View</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
@@ -221,12 +270,12 @@ const AdminDashboard = () => {
                           <TableCell>User Reported Issue</TableCell>
                           <TableCell>Mark Wilson</TableCell>
                           <TableCell>
-                            <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-red-100 text-red-700">
                               Requires Action
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Resolve</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Resolve</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
@@ -234,12 +283,12 @@ const AdminDashboard = () => {
                           <TableCell>New User Registration</TableCell>
                           <TableCell>Sarah Johnson</TableCell>
                           <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-green-100 text-green-700">
                               Verified
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">View</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">View</Button>
                           </TableCell>
                         </TableRow>
                       </TableBody>
@@ -247,7 +296,7 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-white">
+                <Card className="glass-card border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle>System Alerts</CardTitle>
                     <CardDescription>
@@ -256,24 +305,24 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 flex items-start">
+                      <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-yellow-400">
                         <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
                         <div>
                           <p className="font-medium">5 properties require verification</p>
                           <p className="text-sm text-gray-600">Recently uploaded properties need review before being listed</p>
                         </div>
-                        <Button variant="outline" size="sm" className="ml-auto">
+                        <Button variant="outline" size="sm" className="ml-auto rounded-full">
                           Review
                         </Button>
                       </div>
                       
-                      <div className="bg-red-50 border-l-4 border-red-400 p-4 flex items-start">
+                      <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-red-400">
                         <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
                         <div>
                           <p className="font-medium">3 reported issues need attention</p>
                           <p className="text-sm text-gray-600">Users have reported issues with bookings that require immediate action</p>
                         </div>
-                        <Button variant="outline" size="sm" className="ml-auto">
+                        <Button variant="outline" size="sm" className="ml-auto rounded-full">
                           Resolve
                         </Button>
                       </div>
@@ -284,23 +333,23 @@ const AdminDashboard = () => {
             )}
             
             {activeTab === "users" && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold">User Management</h2>
                   <div className="flex gap-2">
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                       <Input
                         placeholder="Search users..."
-                        className="pl-8 w-64"
+                        className="pl-10 w-64 rounded-full"
                       />
                     </div>
-                    <Button>Add User</Button>
+                    <Button className="rounded-full">Add User</Button>
                   </div>
                 </div>
                 
-                <Card>
-                  <CardContent className="p-0">
+                <Card className="glass-card border-0 shadow-lg">
+                  <CardContent className="p-0 overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -317,61 +366,69 @@ const AdminDashboard = () => {
                         <TableRow>
                           <TableCell className="font-medium">John Doe</TableCell>
                           <TableCell>john.doe@example.com</TableCell>
-                          <TableCell>Property Owner</TableCell>
+                          <TableCell>
+                            <span className="tag">Property Owner</span>
+                          </TableCell>
                           <TableCell>5</TableCell>
                           <TableCell>2</TableCell>
                           <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-green-100 text-green-700">
                               Active
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Manage</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium">Jane Smith</TableCell>
                           <TableCell>jane.smith@example.com</TableCell>
-                          <TableCell>User</TableCell>
+                          <TableCell>
+                            <span className="tag">User</span>
+                          </TableCell>
                           <TableCell>0</TableCell>
                           <TableCell>0</TableCell>
                           <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-green-100 text-green-700">
                               Active
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Manage</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium">Sam Johnson</TableCell>
                           <TableCell>sam.johnson@example.com</TableCell>
-                          <TableCell>Admin</TableCell>
+                          <TableCell>
+                            <span className="tag">Admin</span>
+                          </TableCell>
                           <TableCell>0</TableCell>
                           <TableCell>0</TableCell>
                           <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-green-100 text-green-700">
                               Active
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Manage</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
                           </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-medium">Mark Wilson</TableCell>
                           <TableCell>mark.wilson@example.com</TableCell>
-                          <TableCell>Property Owner</TableCell>
+                          <TableCell>
+                            <span className="tag">Property Owner</span>
+                          </TableCell>
                           <TableCell>3</TableCell>
                           <TableCell>1</TableCell>
                           <TableCell>
-                            <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                            <span className="tag bg-gray-100 text-gray-700">
                               Suspended
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm">Manage</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
                           </TableCell>
                         </TableRow>
                       </TableBody>

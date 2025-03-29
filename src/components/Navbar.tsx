@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User, MapPin, Car, House, Calendar, LogOut, UserCog } from "lucide-react";
@@ -13,9 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, profile, roles, signOut, isAdmin, isSuperAdmin, isStaff, isOwner } = useAuth();
 
   const toggleMenu = () => {
@@ -30,8 +32,28 @@ const Navbar = () => {
     return user?.email?.substring(0, 2).toUpperCase() || "U";
   };
 
+  // Effect for scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrolled]);
+
   return (
-    <nav className="bg-white shadow-md py-4 sticky top-0 z-50">
+    <nav className={cn(
+      "sticky top-0 z-50 transition-all duration-300",
+      scrolled 
+        ? "bg-white/80 backdrop-blur-md shadow-md py-2" 
+        : "bg-white py-4"
+    )}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-primary">
@@ -43,19 +65,19 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/properties?type=short-term" className="flex items-center gap-1 text-gray-700 hover:text-primary">
+            <Link to="/properties?type=short-term" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
               <Calendar className="w-4 h-4" />
               <span>Short Term</span>
             </Link>
-            <Link to="/properties?type=long-term" className="flex items-center gap-1 text-gray-700 hover:text-primary">
+            <Link to="/properties?type=long-term" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
               <House className="w-4 h-4" />
               <span>Long Term</span>
             </Link>
-            <Link to="/properties?type=for-sale" className="flex items-center gap-1 text-gray-700 hover:text-primary">
+            <Link to="/properties?type=for-sale" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
               <House className="w-4 h-4" />
               <span>For Sale</span>
             </Link>
-            <Link to="/transportation" className="flex items-center gap-1 text-gray-700 hover:text-primary">
+            <Link to="/transportation" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
               <Car className="w-4 h-4" />
               <span>Transportation</span>
             </Link>
@@ -66,26 +88,26 @@ const Navbar = () => {
               <>
                 {(isAdmin || isSuperAdmin || isOwner) && (
                   <Link to="/admin-dashboard">
-                    <Button variant="outline">Admin Dashboard</Button>
+                    <Button variant="outline" className="rounded-full">Admin Dashboard</Button>
                   </Link>
                 )}
                 
                 {isStaff && (
                   <Link to="/staff-dashboard">
-                    <Button variant="outline">Staff Dashboard</Button>
+                    <Button variant="outline" className="rounded-full">Staff Dashboard</Button>
                   </Link>
                 )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                      <Avatar className="h-10 w-10 border-2 border-primary/20">
                         <AvatarImage src={profile?.avatar_url || ""} alt={profile?.first_name || ""} />
-                        <AvatarFallback>{getInitials()}</AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary">{getInitials()}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuContent className="w-56 glass-card border-0 shadow-lg" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
@@ -95,21 +117,25 @@ const Navbar = () => {
                           {user.email}
                         </p>
                         {roles.length > 0 && (
-                          <p className="text-xs leading-none text-muted-foreground mt-1">
-                            Roles: {roles.join(", ")}
-                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {roles.map(role => (
+                              <span key={role} className="tag text-xs py-0.5 px-2">
+                                {role}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/owner-dashboard" className="w-full cursor-pointer">
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/owner-dashboard" className="flex items-center">
                         <House className="mr-2 h-4 w-4" />
                         <span>List Property</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="w-full cursor-pointer">
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to="/profile" className="flex items-center">
                         <UserCog className="mr-2 h-4 w-4" />
                         <span>Profile</span>
                       </Link>
@@ -125,10 +151,10 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/owner-dashboard">
-                  <Button variant="outline">List Property</Button>
+                  <Button variant="outline" className="rounded-full">List Property</Button>
                 </Link>
                 <Link to="/login">
-                  <Button>
+                  <Button className="rounded-full">
                     <User className="w-4 h-4 mr-2" />
                     <span>Login</span>
                   </Button>
@@ -145,21 +171,21 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 animate-fade-in">
-            <div className="flex flex-col space-y-4 py-2">
-              <Link to="/properties?type=short-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+          <div className="md:hidden mt-4 animate-scale-in glass-card rounded-xl overflow-hidden">
+            <div className="flex flex-col space-y-2 p-4">
+              <Link to="/properties?type=short-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                 <Calendar className="w-4 h-4" />
                 <span>Short Term</span>
               </Link>
-              <Link to="/properties?type=long-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+              <Link to="/properties?type=long-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                 <House className="w-4 h-4" />
                 <span>Long Term</span>
               </Link>
-              <Link to="/properties?type=for-sale" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+              <Link to="/properties?type=for-sale" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                 <House className="w-4 h-4" />
                 <span>For Sale</span>
               </Link>
-              <Link to="/transportation" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+              <Link to="/transportation" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                 <Car className="w-4 h-4" />
                 <span>Transportation</span>
               </Link>
@@ -167,28 +193,31 @@ const Navbar = () => {
               {user ? (
                 <>
                   {(isAdmin || isSuperAdmin || isOwner) && (
-                    <Link to="/admin-dashboard" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                    <Link to="/admin-dashboard" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                       Admin Dashboard
                     </Link>
                   )}
                   
                   {isStaff && (
-                    <Link to="/staff-dashboard" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                    <Link to="/staff-dashboard" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                       Staff Dashboard
                     </Link>
                   )}
 
-                  <Link to="/owner-dashboard" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Link to="/owner-dashboard" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                     List Property
                   </Link>
                   
-                  <Link to="/profile" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Link to="/profile" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                     Profile
                   </Link>
                   
                   <button 
-                    onClick={signOut} 
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                    onClick={() => {
+                      signOut();
+                      toggleMenu();
+                    }} 
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Log out</span>
@@ -196,10 +225,10 @@ const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link to="/owner-dashboard" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Link to="/owner-dashboard" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
                     List Property
                   </Link>
-                  <Link to="/login" className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded">
+                  <Link to="/login" className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg" onClick={toggleMenu}>
                     <User className="w-4 h-4" />
                     <span>Login</span>
                   </Link>

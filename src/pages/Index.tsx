@@ -1,3 +1,4 @@
+
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import PropertyCard, { PropertyProps } from "@/components/PropertyCard";
@@ -60,34 +61,39 @@ const featuredProperties: PropertyProps[] = [{
   rating: 4.6,
   reviews: 92
 }];
+
 const Index = () => {
-  return <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <Hero />
       
       {/* Featured Properties */}
-      <section className="section-padding bg-gray-50">
+      <section className="section-padding">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">Featured Properties</h2>
             <Link to="/properties">
-              <Button variant="outline">View All</Button>
+              <Button variant="outline" className="rounded-full">View All</Button>
             </Link>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProperties.map(property => <PropertyCard key={property.id} {...property} />)}
+            {featuredProperties.map(property => (
+              <div key={property.id} className="animate-fade-in hover-lift">
+                <PropertyCard {...property} />
+              </div>
+            ))}
           </div>
         </div>
       </section>
       
       {/* Property Categories */}
-      <section className="section-padding">
+      <section className="section-padding bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Explore Our Services</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="glass-card rounded-2xl overflow-hidden hover-lift">
               <div className="h-48 overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Short Term Rentals" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
@@ -100,12 +106,12 @@ const Index = () => {
                   Find perfect vacation rentals and holiday homes across Kenya's most beautiful destinations.
                 </p>
                 <Link to="/properties?type=short-term">
-                  <Button className="w-full">Explore Short Term</Button>
+                  <Button className="w-full rounded-lg">Explore Short Term</Button>
                 </Link>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="glass-card rounded-2xl overflow-hidden hover-lift">
               <div className="h-48 overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Long Term Rentals & Properties For Sale" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
@@ -119,16 +125,16 @@ const Index = () => {
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/properties?type=long-term">
-                    <Button variant="outline" className="w-full">Long Term</Button>
+                    <Button variant="outline" className="w-full rounded-lg">Long Term</Button>
                   </Link>
                   <Link to="/properties?type=for-sale">
-                    <Button variant="outline" className="w-full">For Sale</Button>
+                    <Button variant="outline" className="w-full rounded-lg">For Sale</Button>
                   </Link>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="glass-card rounded-2xl overflow-hidden hover-lift">
               <div className="h-48 overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Transportation Services" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
@@ -141,7 +147,7 @@ const Index = () => {
                   Book transportation services including airport transfers, tour vehicles, and taxi services.
                 </p>
                 <Link to="/transportation">
-                  <Button className="w-full">Explore Transport</Button>
+                  <Button className="w-full rounded-lg">Explore Transport</Button>
                 </Link>
               </div>
             </div>
@@ -150,20 +156,20 @@ const Index = () => {
       </section>
       
       {/* Join as Owner CTA */}
-      <section className="bg-primary text-white py-16">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-16 bg-gradient-to-r from-primary to-primary-foreground/20 text-white">
+        <div className="container mx-auto px-4 text-center glass-dark py-12 rounded-2xl">
           <h2 className="text-3xl font-bold mb-4">List Your Property or Vehicle</h2>
           <p className="text-xl max-w-2xl mx-auto mb-8">
             Join thousands of property and vehicle owners earning income on RentAngo.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/owner-dashboard">
-              <Button variant="secondary" className="text-primary font-semibold">
+              <Button variant="secondary" className="text-primary font-semibold rounded-full px-8 py-6 h-auto">
                 List Your Property
               </Button>
             </Link>
             <Link to="/owner-dashboard?tab=transportation">
-              <Button variant="outline" className="text-white border-white bg-sky-950 hover:bg-sky-800">
+              <Button variant="outline" className="text-white border-white bg-transparent hover:bg-white/10 rounded-full px-8 py-6 h-auto">
                 List Your Vehicle
               </Button>
             </Link>
