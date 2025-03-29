@@ -1,4 +1,3 @@
-
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import PropertyCard, { PropertyProps } from "@/components/PropertyCard";
@@ -8,68 +7,61 @@ import { Link } from "react-router-dom";
 import { Car, Calendar, House } from "lucide-react";
 
 // Mock data for featured properties
-const featuredProperties: PropertyProps[] = [
-  {
-    id: "prop1",
-    title: "Luxury Beach Villa with Ocean View",
-    location: "Diani Beach, Mombasa",
-    price: 15000,
-    priceUnit: "night",
-    type: "short-term",
-    imageUrl: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 4,
-    baths: 3,
-    hasTransport: true,
-    rating: 4.9,
-    reviews: 128
-  },
-  {
-    id: "prop2",
-    title: "Modern Apartment in City Center",
-    location: "Westlands, Nairobi",
-    price: 45000,
-    priceUnit: "month",
-    type: "long-term",
-    imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 2,
-    baths: 2,
-    hasTransport: false,
-    rating: 4.7,
-    reviews: 84
-  },
-  {
-    id: "prop3",
-    title: "Spacious Family Home with Garden",
-    location: "Karen, Nairobi",
-    price: 25000000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 5,
-    baths: 4,
-    hasTransport: false,
-    rating: 4.8,
-    reviews: 56
-  },
-  {
-    id: "prop4",
-    title: "Charming Cottage with Pool",
-    location: "Malindi, Coast",
-    price: 12000,
-    priceUnit: "night",
-    type: "short-term",
-    imageUrl: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 3,
-    baths: 2,
-    hasTransport: true,
-    rating: 4.6,
-    reviews: 92
-  }
-];
-
+const featuredProperties: PropertyProps[] = [{
+  id: "prop1",
+  title: "Luxury Beach Villa with Ocean View",
+  location: "Diani Beach, Mombasa",
+  price: 15000,
+  priceUnit: "night",
+  type: "short-term",
+  imageUrl: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+  beds: 4,
+  baths: 3,
+  hasTransport: true,
+  rating: 4.9,
+  reviews: 128
+}, {
+  id: "prop2",
+  title: "Modern Apartment in City Center",
+  location: "Westlands, Nairobi",
+  price: 45000,
+  priceUnit: "month",
+  type: "long-term",
+  imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+  beds: 2,
+  baths: 2,
+  hasTransport: false,
+  rating: 4.7,
+  reviews: 84
+}, {
+  id: "prop3",
+  title: "Spacious Family Home with Garden",
+  location: "Karen, Nairobi",
+  price: 25000000,
+  priceUnit: "total",
+  type: "for-sale",
+  imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+  beds: 5,
+  baths: 4,
+  hasTransport: false,
+  rating: 4.8,
+  reviews: 56
+}, {
+  id: "prop4",
+  title: "Charming Cottage with Pool",
+  location: "Malindi, Coast",
+  price: 12000,
+  priceUnit: "night",
+  type: "short-term",
+  imageUrl: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+  beds: 3,
+  baths: 2,
+  hasTransport: true,
+  rating: 4.6,
+  reviews: 92
+}];
 const Index = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       <Hero />
       
@@ -84,9 +76,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProperties.map(property => (
-              <PropertyCard key={property.id} {...property} />
-            ))}
+            {featuredProperties.map(property => <PropertyCard key={property.id} {...property} />)}
           </div>
         </div>
       </section>
@@ -99,11 +89,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-48 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-                  alt="Short Term Rentals" 
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
-                />
+                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Short Term Rentals" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-xl font-semibold mb-2">
@@ -121,11 +107,7 @@ const Index = () => {
             
             <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-48 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-                  alt="Long Term Rentals & Properties For Sale" 
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
-                />
+                <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Long Term Rentals & Properties For Sale" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-xl font-semibold mb-2">
@@ -148,11 +130,7 @@ const Index = () => {
             
             <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-48 overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-                  alt="Transportation Services" 
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
-                />
+                <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Transportation Services" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-xl font-semibold mb-2">
@@ -185,7 +163,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/owner-dashboard?tab=transportation">
-              <Button variant="outline" className="text-white border-white hover:bg-white/10">
+              <Button variant="outline" className="text-white border-white bg-sky-950 hover:bg-sky-800">
                 List Your Vehicle
               </Button>
             </Link>
@@ -194,8 +172,6 @@ const Index = () => {
       </section>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
