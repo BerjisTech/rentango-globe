@@ -8,9 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Car, Calendar, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Bed, Bath, ArrowRight, Home, SquareFeet } from "lucide-react";
 
 export type PropertyType = "short-term" | "long-term" | "for-sale";
 
@@ -24,6 +24,7 @@ export interface PropertyProps {
   imageUrl: string;
   beds?: number;
   baths?: number;
+  area?: number;
   hasTransport?: boolean;
   rating?: number;
   reviews?: number;
@@ -39,6 +40,7 @@ const PropertyCard = ({
   imageUrl, 
   beds, 
   baths, 
+  area,
   hasTransport, 
   rating,
   reviews 
@@ -47,76 +49,65 @@ const PropertyCard = ({
     type === "short-term" ? `/night` :
     type === "long-term" ? `/month` : "";
 
-  const typeLabel = 
-    type === "short-term" ? "Short-term" :
-    type === "long-term" ? "Long-term" : "For Sale";
-
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative h-48 overflow-hidden">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-0 shadow-sm rounded-2xl">
+      <div className="relative h-56 overflow-hidden">
         <img 
           src={imageUrl} 
           alt={title} 
-          className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
+          className="w-full h-full object-cover"
         />
-        <Badge className="absolute top-2 left-2 bg-primary">{typeLabel}</Badge>
-        {hasTransport && (
-          <Badge className="absolute top-2 right-2 bg-accent text-white flex items-center gap-1">
-            <Car className="h-3 w-3" />
-            <span>Transport Available</span>
-          </Badge>
-        )}
       </div>
       
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-semibold line-clamp-1">{title}</CardTitle>
+      <CardHeader className="px-4 pt-4 pb-0">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-xl font-semibold">{title}</CardTitle>
+            <CardDescription className="flex items-center mt-1 text-gray-600">
+              <MapPin className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <span>{location}</span>
+            </CardDescription>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-bold">
+              ${price.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              {priceLabel}
+            </div>
+          </div>
         </div>
-        <CardDescription className="flex items-center gap-1">
-          <MapPin className="h-3 w-3" />
-          <span>{location}</span>
-        </CardDescription>
       </CardHeader>
       
-      <CardContent className="pb-2">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center text-sm text-gray-600 space-x-4">
-            {beds && (
-              <div>
-                <span className="font-medium">{beds}</span> Beds
-              </div>
-            )}
-            {baths && (
-              <div>
-                <span className="font-medium">{baths}</span> Baths
-              </div>
-            )}
-          </div>
-          {rating && (
-            <div className="flex items-center gap-1 text-sm">
-              <span className="flex items-center bg-green-500 text-white px-1.5 py-0.5 rounded">
-                {rating}★
-              </span>
-              <span className="text-gray-500">({reviews})</span>
+      <CardContent className="px-4 py-3">
+        <div className="flex items-center text-sm text-gray-600 space-x-4 border-t border-gray-100 pt-3">
+          {beds && (
+            <div className="flex items-center">
+              <Bed className="h-4 w-4 mr-1 text-gray-400" />
+              <span>{beds} bd</span>
+            </div>
+          )}
+          {baths && (
+            <div className="flex items-center">
+              <Bath className="h-4 w-4 mr-1 text-gray-400" />
+              <span>{baths} ba</span>
+            </div>
+          )}
+          {area && (
+            <div className="flex items-center">
+              <SquareFeet className="h-4 w-4 mr-1 text-gray-400" />
+              <span>{area} sqft</span>
             </div>
           )}
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between items-center pt-2">
-        <div className="text-lg font-bold">
-          {type === "for-sale" ? (
-            <span>Ksh {price.toLocaleString()}</span>
-          ) : (
-            <div>
-              <span>Ksh {price.toLocaleString()}</span>
-              <span className="text-sm text-gray-500">{priceLabel}</span>
-            </div>
-          )}
-        </div>
-        
+      <CardFooter className="px-4 pt-0 pb-4 flex justify-end">
         <Link to={`/property/${id}`}>
-          <Button variant="outline" size="sm">View Details</Button>
+          <Button variant="outline" size="sm" className="rounded-full px-4">
+            View more
+            <ArrowRight className="ml-1 h-3.5 w-3.5" />
+          </Button>
         </Link>
       </CardFooter>
     </Card>

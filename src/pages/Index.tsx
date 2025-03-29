@@ -1,177 +1,304 @@
+
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import PropertyCard, { PropertyProps } from "@/components/PropertyCard";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Car, Calendar, House } from "lucide-react";
+import { ArrowRight, Building, Home, Badge, DollarSign, MapPin, Search } from "lucide-react";
 
 // Mock data for featured properties
-const featuredProperties: PropertyProps[] = [{
-  id: "prop1",
-  title: "Luxury Beach Villa with Ocean View",
-  location: "Diani Beach, Mombasa",
-  price: 15000,
-  priceUnit: "night",
-  type: "short-term",
-  imageUrl: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-  beds: 4,
-  baths: 3,
-  hasTransport: true,
-  rating: 4.9,
-  reviews: 128
-}, {
-  id: "prop2",
-  title: "Modern Apartment in City Center",
-  location: "Westlands, Nairobi",
-  price: 45000,
-  priceUnit: "month",
-  type: "long-term",
-  imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-  beds: 2,
-  baths: 2,
-  hasTransport: false,
-  rating: 4.7,
-  reviews: 84
-}, {
-  id: "prop3",
-  title: "Spacious Family Home with Garden",
-  location: "Karen, Nairobi",
-  price: 25000000,
-  priceUnit: "total",
-  type: "for-sale",
-  imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-  beds: 5,
-  baths: 4,
-  hasTransport: false,
-  rating: 4.8,
-  reviews: 56
-}, {
-  id: "prop4",
-  title: "Charming Cottage with Pool",
-  location: "Malindi, Coast",
-  price: 12000,
-  priceUnit: "night",
-  type: "short-term",
-  imageUrl: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-  beds: 3,
-  baths: 2,
-  hasTransport: true,
-  rating: 4.6,
-  reviews: 92
-}];
+const featuredProperties: PropertyProps[] = [
+  {
+    id: "prop1",
+    title: "Luxury Beach Villa",
+    location: "Atlanta, GA",
+    price: 350000,
+    priceUnit: "total",
+    type: "for-sale",
+    imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+    beds: 4,
+    baths: 2.5,
+    area: 252,
+    hasTransport: false,
+    rating: 4.9,
+    reviews: 128
+  },
+  {
+    id: "prop2",
+    title: "Modern Apartment",
+    location: "Boston, MA",
+    price: 420000,
+    priceUnit: "total",
+    type: "for-sale",
+    imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+    beds: 2,
+    baths: 1,
+    area: 100,
+    hasTransport: false,
+    rating: 4.7,
+    reviews: 84
+  },
+  {
+    id: "prop3",
+    title: "Family Home",
+    location: "Sandy Springs, GA",
+    price: 510000,
+    priceUnit: "total",
+    type: "for-sale",
+    imageUrl: "https://images.unsplash.com/photo-1628611225249-6c93c971261a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+    beds: 3,
+    baths: 2,
+    area: 180,
+    hasTransport: false,
+    rating: 4.8,
+    reviews: 56
+  }
+];
+
+// Stats data
+const statsData = [
+  { value: "7239", label: "Homes For Sale" },
+  { value: "79+", label: "States" },
+  { value: "1091", label: "Homes To Buy" },
+  { value: "216+", label: "Agents" }
+];
+
+// Service features
+const services = [
+  {
+    id: 1,
+    title: "Find Out How Much You Can Afford",
+    description: "We help you understand what you can budget for your next home.",
+    icon: DollarSign,
+  },
+  {
+    id: 2,
+    title: "Understand Your Monthly Costs",
+    description: "We'll help you figure out what your monthly payments would be.",
+    icon: Home,
+  },
+  {
+    id: 3,
+    title: "Get Help With Your Down Payment",
+    description: "You may be eligible for a special program to help with your down payment.",
+    icon: Badge,
+  },
+];
+
 const Index = () => {
-  return <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <Hero />
       
-      {/* Featured Properties */}
-      <section className="section-padding bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Featured Properties</h2>
-            <Link to="/properties">
-              <Button variant="outline">View All</Button>
-            </Link>
+      {/* Featured Properties Section */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="container mx-auto px-6 lg:px-10">
+          <h2 className="text-3xl font-bold text-center mb-16">
+            The #1 Site Real Estate<br />Professionals Trust*
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredProperties.map(property => (
+              <PropertyCard key={property.id} {...property} />
+            ))}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProperties.map(property => <PropertyCard key={property.id} {...property} />)}
+          <div className="flex justify-center mt-8">
+            <Link to="/properties?type=for-sale">
+              <Button variant="outline" className="rounded-full px-6">
+                View more <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
       
-      {/* Property Categories */}
-      <section className="section-padding">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Explore Our Services</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Short Term Rentals" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-xl font-semibold mb-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <h3>Short Term Rentals</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Find perfect vacation rentals and holiday homes across Kenya's most beautiful destinations.
-                </p>
-                <Link to="/properties?type=short-term">
-                  <Button className="w-full">Explore Short Term</Button>
-                </Link>
-              </div>
+      {/* Services Section */}
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="container mx-auto px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row gap-16">
+            <div className="md:w-1/3">
+              <h2 className="text-4xl font-bold mb-4">
+                Discover<br />
+                How We Can<br />
+                Help You
+              </h2>
             </div>
             
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Long Term Rentals & Properties For Sale" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-xl font-semibold mb-2">
-                  <House className="h-5 w-5 text-primary" />
-                  <h3>Long Term & For Sale</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Browse apartments, houses and properties for long-term rental or purchase.
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link to="/properties?type=long-term">
-                    <Button variant="outline" className="w-full">Long Term</Button>
-                  </Link>
-                  <Link to="/properties?type=for-sale">
-                    <Button variant="outline" className="w-full">For Sale</Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" alt="Transportation Services" className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 text-xl font-semibold mb-2">
-                  <Car className="h-5 w-5 text-primary" />
-                  <h3>Transportation</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Book transportation services including airport transfers, tour vehicles, and taxi services.
-                </p>
-                <Link to="/transportation">
-                  <Button className="w-full">Explore Transport</Button>
-                </Link>
+            <div className="md:w-2/3">
+              <div className="space-y-8">
+                {services.map((service) => (
+                  <div key={service.id} className="flex items-start gap-6 p-6 bg-white rounded-xl shadow-sm">
+                    <div className="flex-shrink-0 h-10 w-10 bg-black text-white rounded-full flex items-center justify-center">
+                      <service.icon size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
+                      <p className="text-gray-600 mb-4">{service.description}</p>
+                      <Button variant="outline" className="rounded-full text-sm px-4">
+                        Learn more <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Join as Owner CTA */}
-      <section className="bg-primary text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">List Your Property or Vehicle</h2>
-          <p className="text-xl max-w-2xl mx-auto mb-8">
-            Join thousands of property and vehicle owners earning income on RentAngo.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/owner-dashboard">
-              <Button variant="secondary" className="text-primary font-semibold">
-                List Your Property
-              </Button>
-            </Link>
-            <Link to="/owner-dashboard?tab=transportation">
-              <Button variant="outline" className="text-white border-white bg-sky-950 hover:bg-sky-800">
-                List Your Vehicle
-              </Button>
-            </Link>
+      {/* Newly Listed Homes */}
+      <section className="py-16 lg:py-24">
+        <div className="container mx-auto px-6 lg:px-10">
+          <div className="bg-gray-900 rounded-3xl overflow-hidden">
+            <div className="flex flex-col md:flex-row">
+              <div className="md:w-1/2 p-12 text-white">
+                <h2 className="text-4xl font-bold mb-4">
+                  Newly Listed<br />
+                  Homes In<br />
+                  Newton
+                </h2>
+                <p className="text-gray-300 mb-10">
+                  We've found the properties that can match your needs. Take a look at what we've got for you.
+                </p>
+                
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Agent Listing</p>
+                    <p className="text-xl">24,960</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Others</p>
+                    <p className="text-xl">10,845 MLS Listings</p>
+                  </div>
+                </div>
+                
+                <div className="mt-10">
+                  <Button className="rounded-full px-6 bg-white text-black hover:bg-gray-100">
+                    Learn more <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="md:w-1/2 relative min-h-[400px]">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{
+                    backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')"
+                  }}
+                />
+                <div className="absolute right-6 bottom-6 bg-white rounded-xl p-4 shadow-lg">
+                  <p className="text-sm font-semibold">Newton Resident</p>
+                  <Button variant="outline" size="sm" className="mt-2 rounded-full text-xs px-3">
+                    Learn more <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Stats Section */}
+      <section className="py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-6 lg:px-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {statsData.map((stat, index) => (
+              <div key={index}>
+                <p className="text-5xl font-bold mb-2">{stat.value}</p>
+                <p className="text-gray-600">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Home Loan Section */}
+      <section className="py-16 lg:py-24 bg-gray-50">
+        <div className="container mx-auto px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="md:w-1/2">
+              <img 
+                src="https://images.unsplash.com/photo-1560520031-3a4dc4e9de0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="Home loan" 
+                className="rounded-3xl"
+              />
+            </div>
+            <div className="md:w-1/2">
+              <h2 className="text-4xl font-bold mb-6">
+                Need a Home<br />
+                Loan?
+              </h2>
+              
+              <div className="flex gap-4 mt-8">
+                <Link to="/mortgage">
+                  <Button variant="outline" className="rounded-full px-6">
+                    Get Pre-Approved Now <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/disclosure">
+                  <Button variant="outline" className="rounded-full px-6">
+                    Advertising Disclosure <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Neighborhood Section */}
+      <section className="py-16 lg:py-24 bg-sky-100">
+        <div className="container mx-auto px-6 lg:px-10">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">
+              Check Out a<br />
+              Neighborhood
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto">
+              Learn about the schools, safety, and community in any neighborhood you're considering.
+            </p>
+            
+            <div className="flex justify-center mt-8">
+              <div className="relative max-w-md w-full">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Input 
+                  type="text" 
+                  placeholder="Enter a neighborhood" 
+                  className="pl-12 pr-24 bg-white border border-gray-200 h-14 rounded-xl" 
+                />
+                <Button className="absolute right-1 top-1 rounded-lg h-12 px-5 bg-black text-white">
+                  Search
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="overflow-hidden rounded-xl shadow-lg">
+              <img 
+                src="https://images.unsplash.com/photo-1625178551411-62eea1351c37?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="Neighborhood 1" 
+                className="w-full h-48 object-cover"
+              />
+            </div>
+            <div className="overflow-hidden rounded-xl shadow-lg">
+              <img 
+                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="Neighborhood 2" 
+                className="w-full h-48 object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
       
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
