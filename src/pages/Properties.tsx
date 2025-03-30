@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,20 +7,25 @@ import PropertyCard, { PropertyProps, PropertyType } from "@/components/Property
 import SearchFilters from "@/components/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, List, Layers, X } from "lucide-react";
+import { 
+  ToggleGroup, 
+  ToggleGroupItem 
+} from "@/components/ui/toggle-group";
 
 // Mock property data
 const allProperties: PropertyProps[] = [
   {
     id: "prop1",
     title: "Luxury Beach Villa with Ocean View",
-    location: "Diani Beach, Mombasa",
-    price: 15000,
-    priceUnit: "night",
-    type: "short-term",
+    location: "2922 Barnes Ave, New York",
+    price: 505000,
+    priceUnit: "total",
+    type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 4,
     baths: 3,
+    area: 1520,
     hasTransport: true,
     rating: 4.9,
     reviews: 128
@@ -28,27 +33,30 @@ const allProperties: PropertyProps[] = [
   {
     id: "prop2",
     title: "Modern Apartment in City Center",
-    location: "Westlands, Nairobi",
-    price: 45000,
-    priceUnit: "month",
-    type: "long-term",
+    location: "636 E 92nd St, New York",
+    price: 489000,
+    priceUnit: "total",
+    type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 2,
     baths: 2,
+    area: 1100,
     hasTransport: false,
+    featured: true,
     rating: 4.7,
     reviews: 84
   },
   {
     id: "prop3",
     title: "Spacious Family Home with Garden",
-    location: "Karen, Nairobi",
-    price: 25000000,
+    location: "4308 Avenue M, New York",
+    price: 619900,
     priceUnit: "total",
     type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 5,
     baths: 4,
+    area: 1624,
     hasTransport: false,
     rating: 4.8,
     reviews: 56
@@ -56,27 +64,30 @@ const allProperties: PropertyProps[] = [
   {
     id: "prop4",
     title: "Charming Cottage with Pool",
-    location: "Malindi, Coast",
-    price: 12000,
-    priceUnit: "night",
-    type: "short-term",
+    location: "565 Broome St, New York",
+    price: 360000,
+    priceUnit: "total",
+    type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 3,
     baths: 2,
+    area: 1320,
     hasTransport: true,
+    featured: true,
     rating: 4.6,
     reviews: 92
   },
   {
     id: "prop5",
     title: "Penthouse Apartment with City Views",
-    location: "Kilimani, Nairobi",
-    price: 60000,
-    priceUnit: "month",
-    type: "long-term",
+    location: "Park Ave, New York",
+    price: 760000,
+    priceUnit: "total",
+    type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 3,
     baths: 3,
+    area: 1450,
     hasTransport: false,
     rating: 4.5,
     reviews: 42
@@ -84,59 +95,35 @@ const allProperties: PropertyProps[] = [
   {
     id: "prop6",
     title: "Cozy Studio in Town",
-    location: "Nyali, Mombasa",
-    price: 8000,
-    priceUnit: "night",
-    type: "short-term",
+    location: "Central Park West, New York",
+    price: 158000,
+    priceUnit: "total",
+    type: "for-sale",
     imageUrl: "https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     beds: 1,
     baths: 1,
+    area: 650,
     hasTransport: true,
     rating: 4.4,
     reviews: 76
-  },
-  {
-    id: "prop7",
-    title: "Elegant Townhouse Near Park",
-    location: "Lavington, Nairobi",
-    price: 18000000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 4,
-    baths: 3,
-    hasTransport: false,
-    rating: 4.7,
-    reviews: 28
-  },
-  {
-    id: "prop8",
-    title: "Lake View Vacation Home",
-    location: "Naivasha, Rift Valley",
-    price: 18000,
-    priceUnit: "night",
-    type: "short-term",
-    imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 3,
-    baths: 2,
-    hasTransport: true,
-    rating: 4.8,
-    reviews: 112
   }
 ];
 
 const Properties = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const typeParam = params.get("type") as PropertyType || "short-term";
+  const typeParam = params.get("type") as PropertyType || "for-sale";
   const locationParam = params.get("location") || "";
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const [propertyType, setPropertyType] = useState<PropertyType>(typeParam);
   const [searchQuery, setSearchQuery] = useState(locationParam);
   const [properties, setProperties] = useState<PropertyProps[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"map" | "list" | "split">("split");
   const [filters, setFilters] = useState({
     location: locationParam,
-    priceRange: [0, propertyType === "for-sale" ? 50000000 : 100000],
+    priceRange: [0, propertyType === "for-sale" ? 1000000 : 10000],
     bedrooms: undefined,
     hasTransport: false,
   });
@@ -184,102 +171,142 @@ const Properties = () => {
       ...filters,
       ...newFilters,
     });
+    setShowFilters(false);
   };
 
-  const getTypeTitle = () => {
-    switch(propertyType) {
-      case "short-term":
-        return "Short Term Rentals";
-      case "long-term":
-        return "Long Term Rentals";
-      case "for-sale":
-        return "Properties For Sale";
-      default:
-        return "Properties";
+  // Mock map implementation (in a real app, you'd use a mapping library)
+  useEffect(() => {
+    if (mapContainerRef.current) {
+      // This would be where you initialize your map
+      // For now, we'll just add a placeholder
+      const mapPlaceholder = document.createElement("img");
+      mapPlaceholder.src = "/lovable-uploads/82bb4d50-2a70-4950-9622-283c0c5c86ba.png";
+      mapPlaceholder.alt = "Property Map";
+      mapPlaceholder.className = "w-full h-full object-cover rounded-lg";
+      
+      // Clear the container and append the placeholder
+      mapContainerRef.current.innerHTML = "";
+      mapContainerRef.current.appendChild(mapPlaceholder);
     }
-  };
+  }, [properties]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar />
       
-      <div className="bg-primary/10 py-10 mb-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-4">{getTypeTitle()}</h1>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+      <div className="flex-1 flex flex-col">
+        {/* Search Header */}
+        <div className="bg-white shadow-sm border-b border-gray-100 py-4">
+          <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Search by location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
+                className="pl-10 pr-4 py-2 rounded-full border-gray-200"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <Button onClick={handleSearch} className="whitespace-nowrap">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-full"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <SlidersHorizontal className="h-4 w-4 mr-1" />
+                Filters
+              </Button>
+              
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as "map" | "list" | "split")}>
+                <ToggleGroupItem value="map" aria-label="Map view">
+                  <MapPin className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="split" aria-label="Split view">
+                  <Layers className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view">
+                  <List className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="container mx-auto px-4 flex-1 mb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <SearchFilters
-              propertyType={propertyType}
-              onFilterChange={handleFilterChange}
-            />
-          </div>
+        
+        {/* Main Content */}
+        <div className="flex-1 flex container mx-auto p-4 gap-4">
+          {/* Map View (Left Side) */}
+          {(viewMode === "map" || viewMode === "split") && (
+            <div className={`${viewMode === "split" ? "w-1/2" : "w-full"} h-[calc(100vh-12rem)] relative rounded-xl overflow-hidden border border-gray-200 bg-gray-100`}>
+              <div ref={mapContainerRef} className="w-full h-full"></div>
+            </div>
+          )}
           
-          <div className="lg:col-span-3">
-            <div className="mb-4 flex justify-between items-center">
-              <p className="text-gray-600">
-                {properties.length} {properties.length === 1 ? 'property' : 'properties'} found
-              </p>
-              <div className="flex gap-2">
-                <Button 
-                  variant={propertyType === "short-term" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPropertyType("short-term")}
-                >
-                  Short Term
-                </Button>
-                <Button 
-                  variant={propertyType === "long-term" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPropertyType("long-term")}
-                >
-                  Long Term
-                </Button>
-                <Button 
-                  variant={propertyType === "for-sale" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPropertyType("for-sale")}
-                >
-                  For Sale
+          {/* Properties List (Right Side) */}
+          {(viewMode === "list" || viewMode === "split") && (
+            <div className={`${viewMode === "split" ? "w-1/2" : "w-full"} flex flex-col h-[calc(100vh-12rem)] overflow-hidden`}>
+              {/* Results Header */}
+              <div className="bg-white p-4 rounded-t-xl border border-gray-200 flex justify-between items-center">
+                <h2 className="font-semibold text-lg">
+                  <span className="font-bold">{properties.length}</span> Results
+                  {filters.location && <span className="font-normal text-base"> in {filters.location}</span>}
+                </h2>
+                
+                <div className="text-sm text-gray-500 flex items-center">
+                  Sort by: 
+                  <span className="font-medium text-black ml-1">Price</span>
+                </div>
+              </div>
+              
+              {/* Property Cards */}
+              <div className="flex-1 overflow-y-auto bg-white border-x border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {properties.length > 0 ? (
+                  properties.map(property => (
+                    <PropertyCard key={property.id} {...property} />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <h3 className="font-semibold text-xl mb-2">No properties found</h3>
+                    <p className="text-gray-600">
+                      Try adjusting your search filters to find more options
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Pagination */}
+              <div className="bg-white p-3 rounded-b-xl border border-gray-200 border-t-0 flex justify-center">
+                <Button variant="outline" size="sm" className="rounded-full px-4">
+                  Load More
                 </Button>
               </div>
             </div>
-            
-            {properties.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {properties.map(property => (
-                  <PropertyCard key={property.id} {...property} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-xl mb-2">No properties found</h3>
-                <p className="text-gray-600">
-                  Try adjusting your search filters to find more options
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+        
+        {/* Filters Sidebar */}
+        {showFilters && (
+          <div className="fixed inset-y-0 right-0 w-72 bg-white shadow-xl z-50 transform transition-transform ease-in-out duration-300 overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="font-semibold">Filters</h3>
+              <button 
+                onClick={() => setShowFilters(false)}
+                className="text-gray-500 hover:text-gray-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <SearchFilters 
+                propertyType={propertyType} 
+                onFilterChange={handleFilterChange} 
+              />
+            </div>
+          </div>
+        )}
       </div>
       
       <Footer />
