@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard, { PropertyProps, PropertyType } from "@/components/PropertyCard";
 import SearchFilters from "@/components/SearchFilters";
+import Map from "@/components/Map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal, MapPin, List, Layers, X } from "lucide-react";
@@ -114,13 +115,13 @@ const Properties = () => {
   const params = new URLSearchParams(location.search);
   const typeParam = params.get("type") as PropertyType || "for-sale";
   const locationParam = params.get("location") || "";
-  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const [propertyType, setPropertyType] = useState<PropertyType>(typeParam);
   const [searchQuery, setSearchQuery] = useState(locationParam);
   const [properties, setProperties] = useState<PropertyProps[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"map" | "list" | "split">("split");
+  const [selectedProperty, setSelectedProperty] = useState<PropertyProps | null>(null);
   const [filters, setFilters] = useState({
     location: locationParam,
     priceRange: [0, propertyType === "for-sale" ? 1000000 : 10000],
@@ -157,6 +158,8 @@ const Properties = () => {
     }
     
     setProperties(filtered);
+    // Reset selected property when filters change
+    setSelectedProperty(null);
   }, [propertyType, filters]);
 
   const handleSearch = () => {
@@ -174,21 +177,9 @@ const Properties = () => {
     setShowFilters(false);
   };
 
-  // Mock map implementation (in a real app, you'd use a mapping library)
-  useEffect(() => {
-    if (mapContainerRef.current) {
-      // This would be where you initialize your map
-      // For now, we'll just add a placeholder
-      const mapPlaceholder = document.createElement("img");
-      mapPlaceholder.src = "/lovable-uploads/82bb4d50-2a70-4950-9622-283c0c5c86ba.png";
-      mapPlaceholder.alt = "Property Map";
-      mapPlaceholder.className = "w-full h-full object-cover rounded-lg";
-      
-      // Clear the container and append the placeholder
-      mapContainerRef.current.innerHTML = "";
-      mapContainerRef.current.appendChild(mapPlaceholder);
-    }
-  }, [properties]);
+  const handlePropertySelect = (property: PropertyProps) => {
+    setSelectedProperty(property);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -241,7 +232,11 @@ const Properties = () => {
           {/* Map View (Left Side) */}
           {(viewMode === "map" || viewMode === "split") && (
             <div className={`${viewMode === "split" ? "w-1/2" : "w-full"} h-[calc(100vh-12rem)] relative rounded-xl overflow-hidden border border-gray-200 bg-gray-100`}>
-              <div ref={mapContainerRef} className="w-full h-full"></div>
+              <Map 
+                properties={properties} 
+                selectedProperty={selectedProperty}
+                onPropertySelect={handlePropertySelect}
+              />
             </div>
           )}
           
@@ -265,7 +260,13 @@ const Properties = () => {
               <div className="flex-1 overflow-y-auto bg-white border-x border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {properties.length > 0 ? (
                   properties.map(property => (
-                    <PropertyCard key={property.id} {...property} />
+                    <div 
+                      key={property.id}
+                      className={`cursor-pointer transition-all duration-200 ${selectedProperty?.id === property.id ? 'scale-[1.02] ring-2 ring-primary ring-offset-2' : ''}`}
+                      onClick={() => handlePropertySelect(property)}
+                    >
+                      <PropertyCard {...property} />
+                    </div>
                   ))
                 ) : (
                   <div className="col-span-full text-center py-12">

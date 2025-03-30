@@ -53,7 +53,7 @@ const PropertyCard = ({
     type === "long-term" ? `/month` : "";
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 shadow-sm rounded-xl relative">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 shadow-sm rounded-xl relative h-full">
       <div className="relative h-44 overflow-hidden">
         <img 
           src={imageUrl} 
@@ -72,7 +72,7 @@ const PropertyCard = ({
       
       <CardContent className="px-3 pt-3 pb-2">
         <div className="mb-1">
-          <div className="text-lg font-semibold text-primary">${price.toLocaleString()}</div>
+          <div className="text-lg font-semibold text-primary">${price.toLocaleString()}{priceLabel}</div>
         </div>
         
         <div className="text-sm font-medium mb-1">{title}</div>
