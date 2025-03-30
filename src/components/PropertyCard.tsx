@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, ArrowRight, Home, SquareFeet } from "lucide-react";
+import { MapPin, Bed, Bath, ArrowRight, Home, Square } from "lucide-react";
 
 export type PropertyType = "short-term" | "long-term" | "for-sale";
 
@@ -95,7 +95,7 @@ const PropertyCard = ({
           )}
           {area && (
             <div className="flex items-center">
-              <SquareFeet className="h-4 w-4 mr-1 text-gray-400" />
+              <Square className="h-4 w-4 mr-1 text-gray-400" />
               <span>{area} sqft</span>
             </div>
           )}
