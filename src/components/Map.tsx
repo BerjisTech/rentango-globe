@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -42,11 +41,13 @@ const Map = ({ properties, selectedProperty, onPropertySelect }: MapProps) => {
 
     mapboxgl.accessToken = mapboxToken;
     
+    // Default to Kilifi, Kenya coordinates: 39.8499° E, 3.6305° S
+    // Note: Mapbox uses [longitude, latitude] format
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center: [-74.5, 40], // Default to NYC area
-      zoom: 9,
+      center: [39.8499, -3.6305], // Kilifi, Kenya coordinates
+      zoom: 12,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
@@ -82,7 +83,14 @@ const Map = ({ properties, selectedProperty, onPropertySelect }: MapProps) => {
         return char.charCodeAt(0) + acc;
       }, 0);
       
-      // Generate coordinates around NYC
+      if (location.toLowerCase().includes("kilifi")) {
+        // Return coordinates near Kilifi for properties mentioning Kilifi
+        const lng = 39.8499 + (hash % 10) * 0.01;
+        const lat = -3.6305 + (hash % 7) * 0.01;
+        return [lng, lat];
+      }
+      
+      // Generate coordinates around NYC (keeping original logic for non-Kilifi locations)
       const lng = -74.0 + (hash % 10) * 0.01;
       const lat = 40.7 + (hash % 7) * 0.01;
       
@@ -150,6 +158,12 @@ const Map = ({ properties, selectedProperty, onPropertySelect }: MapProps) => {
       map.current.fitBounds(bounds, {
         padding: 50,
         maxZoom: 15
+      });
+    } else {
+      // If no properties or bounds, center on Kilifi
+      map.current.flyTo({
+        center: [39.8499, -3.6305],
+        zoom: 12
       });
     }
   }, [properties, selectedProperty, mapboxToken, onPropertySelect]);
