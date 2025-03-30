@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -36,6 +35,9 @@ import {
   MessageSquare,
   Settings
 } from "lucide-react";
+import AddPropertyDialog from "@/components/dialogs/AddPropertyDialog";
+import AddVehicleDialog from "@/components/dialogs/AddVehicleDialog";
+import { toast } from "sonner";
 
 const OwnerDashboard = () => {
   const location = useLocation();
@@ -43,6 +45,64 @@ const OwnerDashboard = () => {
   const defaultTab = params.get("tab") || "overview";
   
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [properties, setProperties] = useState([
+    {
+      title: "Luxury Beach Villa",
+      type: "Short Term",
+      location: "Diani Beach, Mombasa",
+      status: "Active",
+      price: "Ksh 15,000/night"
+    },
+    {
+      title: "Modern Apartment",
+      type: "Long Term",
+      location: "Westlands, Nairobi",
+      status: "Active",
+      price: "Ksh 45,000/month"
+    },
+    {
+      title: "Spacious Family Home",
+      type: "For Sale",
+      location: "Karen, Nairobi",
+      status: "Active",
+      price: "Ksh 25,000,000"
+    }
+  ]);
+  
+  const [vehicles, setVehicles] = useState([
+    {
+      title: "Toyota Fortuner SUV",
+      type: "Car",
+      location: "Nairobi",
+      status: "Available",
+      price: "Ksh 7,000/day"
+    },
+    {
+      title: "Airport Transfer Mercedes",
+      type: "Taxi",
+      location: "Mombasa",
+      status: "Booked",
+      price: "Ksh 3,500/trip"
+    },
+    {
+      title: "Safari Land Cruiser",
+      type: "Car",
+      location: "Nairobi",
+      status: "Available",
+      price: "Ksh 8,000/day"
+    }
+  ]);
+  
+  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
+  
+  const handleAddProperty = (property: any) => {
+    setProperties([...properties, property]);
+  };
+  
+  const handleAddVehicle = (vehicle: any) => {
+    setVehicles([...vehicles, vehicle]);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -132,7 +192,7 @@ const OwnerDashboard = () => {
                     <CardContent>
                       <div className="flex items-center">
                         <House className="h-5 w-5 text-primary mr-2" />
-                        <div className="text-2xl font-bold">5</div>
+                        <div className="text-2xl font-bold">{properties.length}</div>
                       </div>
                     </CardContent>
                   </Card>
@@ -144,7 +204,7 @@ const OwnerDashboard = () => {
                     <CardContent>
                       <div className="flex items-center">
                         <Car className="h-5 w-5 text-primary mr-2" />
-                        <div className="text-2xl font-bold">3</div>
+                        <div className="text-2xl font-bold">{vehicles.length}</div>
                       </div>
                     </CardContent>
                   </Card>
@@ -235,7 +295,7 @@ const OwnerDashboard = () => {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold">Your Properties</h2>
-                  <Button>
+                  <Button onClick={() => setIsAddPropertyOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Property
                   </Button>
@@ -264,54 +324,24 @@ const OwnerDashboard = () => {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            <TableRow>
-                              <TableCell className="font-medium">Luxury Beach Villa</TableCell>
-                              <TableCell>Short Term</TableCell>
-                              <TableCell>Diani Beach, Mombasa</TableCell>
-                              <TableCell>
-                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                                  Active
-                                </span>
-                              </TableCell>
-                              <TableCell>Ksh 15,000/night</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="outline" size="sm">
-                                  Manage
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell className="font-medium">Modern Apartment</TableCell>
-                              <TableCell>Long Term</TableCell>
-                              <TableCell>Westlands, Nairobi</TableCell>
-                              <TableCell>
-                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                                  Active
-                                </span>
-                              </TableCell>
-                              <TableCell>Ksh 45,000/month</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="outline" size="sm">
-                                  Manage
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell className="font-medium">Spacious Family Home</TableCell>
-                              <TableCell>For Sale</TableCell>
-                              <TableCell>Karen, Nairobi</TableCell>
-                              <TableCell>
-                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                                  Active
-                                </span>
-                              </TableCell>
-                              <TableCell>Ksh 25,000,000</TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="outline" size="sm">
-                                  Manage
-                                </Button>
-                              </TableCell>
-                            </TableRow>
+                            {properties.map((property, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-medium">{property.title}</TableCell>
+                                <TableCell>{property.type}</TableCell>
+                                <TableCell>{property.location}</TableCell>
+                                <TableCell>
+                                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                    {property.status}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{property.price}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="outline" size="sm">
+                                    Manage
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
                           </TableBody>
                         </Table>
                       </CardContent>
@@ -319,15 +349,120 @@ const OwnerDashboard = () => {
                   </TabsContent>
                   
                   <TabsContent value="short-term" className="mt-6">
-                    {/* Similar table with only short-term properties */}
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Location</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Price</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {properties
+                              .filter(property => property.type.toLowerCase() === "short term")
+                              .map((property, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">{property.title}</TableCell>
+                                  <TableCell>{property.location}</TableCell>
+                                  <TableCell>
+                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                      {property.status}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>{property.price}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button variant="outline" size="sm">
+                                      Manage
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                   
                   <TabsContent value="long-term" className="mt-6">
-                    {/* Similar table with only long-term properties */}
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Location</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Price</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {properties
+                              .filter(property => property.type.toLowerCase() === "long term")
+                              .map((property, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">{property.title}</TableCell>
+                                  <TableCell>{property.location}</TableCell>
+                                  <TableCell>
+                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                      {property.status}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>{property.price}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button variant="outline" size="sm">
+                                      Manage
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                   
                   <TabsContent value="for-sale" className="mt-6">
-                    {/* Similar table with only for-sale properties */}
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Title</TableHead>
+                              <TableHead>Location</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Price</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {properties
+                              .filter(property => property.type.toLowerCase() === "for sale")
+                              .map((property, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">{property.title}</TableCell>
+                                  <TableCell>{property.location}</TableCell>
+                                  <TableCell>
+                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                      {property.status}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>{property.price}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button variant="outline" size="sm">
+                                      Manage
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </Tabs>
               </div>
@@ -337,7 +472,7 @@ const OwnerDashboard = () => {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold">Your Vehicles</h2>
-                  <Button>
+                  <Button onClick={() => setIsAddVehicleOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Vehicle
                   </Button>
@@ -357,54 +492,24 @@ const OwnerDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">Toyota Fortuner SUV</TableCell>
-                          <TableCell>Car</TableCell>
-                          <TableCell>Nairobi</TableCell>
-                          <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                              Available
-                            </span>
-                          </TableCell>
-                          <TableCell>Ksh 7,000/day</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm">
-                              Manage
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Airport Transfer Mercedes</TableCell>
-                          <TableCell>Taxi</TableCell>
-                          <TableCell>Mombasa</TableCell>
-                          <TableCell>
-                            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs">
-                              Booked
-                            </span>
-                          </TableCell>
-                          <TableCell>Ksh 3,500/trip</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm">
-                              Manage
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Safari Land Cruiser</TableCell>
-                          <TableCell>Car</TableCell>
-                          <TableCell>Nairobi</TableCell>
-                          <TableCell>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                              Available
-                            </span>
-                          </TableCell>
-                          <TableCell>Ksh 8,000/day</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm">
-                              Manage
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                        {vehicles.map((vehicle, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{vehicle.title}</TableCell>
+                            <TableCell>{vehicle.type}</TableCell>
+                            <TableCell>{vehicle.location}</TableCell>
+                            <TableCell>
+                              <span className={`${vehicle.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} px-2 py-1 rounded-full text-xs`}>
+                                {vehicle.status}
+                              </span>
+                            </TableCell>
+                            <TableCell>{vehicle.price}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="outline" size="sm">
+                                Manage
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -575,6 +680,20 @@ const OwnerDashboard = () => {
       </div>
       
       <Footer />
+      
+      {/* Add Property Dialog */}
+      <AddPropertyDialog 
+        open={isAddPropertyOpen}
+        onOpenChange={setIsAddPropertyOpen}
+        onAddProperty={handleAddProperty}
+      />
+      
+      {/* Add Vehicle Dialog */}
+      <AddVehicleDialog
+        open={isAddVehicleOpen}
+        onOpenChange={setIsAddVehicleOpen}
+        onAddVehicle={handleAddVehicle}
+      />
     </div>
   );
 };
