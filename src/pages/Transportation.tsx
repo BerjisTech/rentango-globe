@@ -319,18 +319,18 @@ const Transportation = () => {
             </div>
             
             <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1603459206747-b4ef50bbf4c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-                alt="Safe transportation" 
-                className="w-full h-auto rounded-lg shadow-lg"
-              />
-              <div className="absolute -bottom-6 -right-6 bg-white text-black p-6 rounded-lg shadow-lg max-w-xs">
+              <div className="w-full bg-white text-black p-6 rounded-lg shadow-lg max-w-xs">
                 <p className="font-semibold mb-2">Verified Drivers</p>
                 <p className="text-sm text-gray-600 mb-4">All our drivers have passed rigorous safety checks and training</p>
                 <Button size="sm" className="rounded-full">
                   Learn More
                 </Button>
               </div>
+              <img 
+                src="https://www.pngkey.com/png/full/918-9183571_new-2019-mazda-cx-3-touring-2019-mazda.png" 
+                alt="Safe transportation" 
+                className="w-full h-auto rounded-lg shadow-lg bg-gradient-to-t from-blue-500 via-white/50 to-white/0"
+              />
             </div>
           </div>
         </div>
