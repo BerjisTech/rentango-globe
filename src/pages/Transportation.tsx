@@ -91,7 +91,7 @@ const Transportation = () => {
         <div className="absolute inset-0 bg-black overflow-hidden">
           {/* Dark showroom gradient effect */}
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-800 opacity-95" />
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1494891848038-7bd202a2afeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=3847&q=80')] bg-cover bg-center opacity-30 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-[url('https://i.pinimg.com/736x/0e/cf/e7/0ecfe78f16e734d5b43d60251194654b.jpg')] bg-cover bg-center opacity-30 mix-blend-overlay" />
           
           {/* Elegant spotlight effect */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-gradient-to-b from-zinc-200/5 to-transparent blur-3xl opacity-30" />
