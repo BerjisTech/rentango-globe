@@ -318,8 +318,8 @@ const Transportation = () => {
               </Accordion>
             </div>
             
-            <div className="relative">
-              <div className="w-full bg-white text-black p-6 rounded-lg shadow-lg max-w-xs">
+            <div className="flex flex-col">
+              <div className="w-full bg-white text-black p-6 rounded-lg">
                 <p className="font-semibold mb-2">Verified Drivers</p>
                 <p className="text-sm text-gray-600 mb-4">All our drivers have passed rigorous safety checks and training</p>
                 <Button size="sm" className="rounded-full">
@@ -329,7 +329,7 @@ const Transportation = () => {
               <img 
                 src="https://www.pngkey.com/png/full/918-9183571_new-2019-mazda-cx-3-touring-2019-mazda.png" 
                 alt="Safe transportation" 
-                className="w-full h-auto rounded-lg shadow-lg bg-gradient-to-t from-blue-500 via-white/50 to-white/0"
+                className="w-full h-auto rounded-lg bg-gradient-to-t from-blue-500 via-white/50 to-white/0"
               />
             </div>
           </div>
