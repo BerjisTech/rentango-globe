@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, MapPin, Car, House, Calendar, LogOut, UserCog } from "lucide-react";
+import { Menu, X, User, LogOut, UserCog } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   DropdownMenu,
@@ -58,28 +58,23 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-primary">
             <span className="flex items-center gap-2">
-              <MapPin className="w-6 h-6" />
               RentAngo
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/properties?type=short-term" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
-              <Calendar className="w-4 h-4" />
-              <span>Short Term</span>
+            <Link to="/properties?type=short-term" className="text-gray-700 hover:text-primary transition-colors">
+              Short Term
             </Link>
-            <Link to="/properties?type=long-term" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
-              <House className="w-4 h-4" />
-              <span>Long Term</span>
+            <Link to="/properties?type=long-term" className="text-gray-700 hover:text-primary transition-colors">
+              Long Term
             </Link>
-            <Link to="/properties?type=for-sale" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
-              <House className="w-4 h-4" />
-              <span>For Sale</span>
+            <Link to="/properties?type=for-sale" className="text-gray-700 hover:text-primary transition-colors">
+              For Sale
             </Link>
-            <Link to="/transportation" className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors">
-              <Car className="w-4 h-4" />
-              <span>Transportation</span>
+            <Link to="/transportation" className="text-gray-700 hover:text-primary transition-colors">
+              Transportation
             </Link>
           </div>
 
@@ -130,7 +125,6 @@ const Navbar = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link to="/owner-dashboard" className="flex items-center">
-                        <House className="mr-2 h-4 w-4" />
                         <span>List Property</span>
                       </Link>
                     </DropdownMenuItem>
@@ -173,21 +167,17 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden mt-4 animate-scale-in glass-card rounded-xl overflow-hidden">
             <div className="flex flex-col space-y-2 p-4">
-              <Link to="/properties?type=short-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
-                <Calendar className="w-4 h-4" />
-                <span>Short Term</span>
+              <Link to="/properties?type=short-term" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
+                Short Term
               </Link>
-              <Link to="/properties?type=long-term" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
-                <House className="w-4 h-4" />
-                <span>Long Term</span>
+              <Link to="/properties?type=long-term" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
+                Long Term
               </Link>
-              <Link to="/properties?type=for-sale" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
-                <House className="w-4 h-4" />
-                <span>For Sale</span>
+              <Link to="/properties?type=for-sale" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
+                For Sale
               </Link>
-              <Link to="/transportation" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
-                <Car className="w-4 h-4" />
-                <span>Transportation</span>
+              <Link to="/transportation" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors" onClick={toggleMenu}>
+                Transportation
               </Link>
               
               {user ? (
