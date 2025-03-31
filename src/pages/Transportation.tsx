@@ -90,12 +90,12 @@ const Transportation = () => {
         {/* Background Image */}
         <div className="absolute inset-0 bg-black overflow-hidden">
           {/* Dark showroom gradient effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-800 opacity-95" />
-          <div className="absolute inset-0 bg-[url('https://i.pinimg.com/736x/0e/cf/e7/0ecfe78f16e734d5b43d60251194654b.jpg')] bg-cover bg-center opacity-30 mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-800 opacity-[.5]" />
+          <div className="absolute inset-0 bg-[url('https://i.pinimg.com/736x/0e/cf/e7/0ecfe78f16e734d5b43d60251194654b.jpg')] bg-cover bg-center opacity-[.3] mix-blend-overlay" />
           
           {/* Elegant spotlight effect */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-gradient-to-b from-zinc-200/5 to-transparent blur-3xl opacity-30" />
-          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black to-transparent" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-gradient-to-b from-zinc-200/5 to-transparent blur-3xl opacity-[.3]" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
         </div>
         
         {/* Hero Content */}
