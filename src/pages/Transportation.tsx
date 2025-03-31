@@ -101,8 +101,8 @@ const Transportation = () => {
             
             <div className="w-full max-w-5xl mx-auto my-8">
               <img 
-                src="/lovable-uploads/319a98ca-944e-4f1f-aa6e-05f24de4847d.png" 
-                alt="Luxury car" 
+                src="https://www.pngkey.com/png/full/918-9183571_new-2019-mazda-cx-3-touring-2019-mazda.png" 
+                alt="Mazda CX-3" 
                 className="w-full h-auto object-contain"
               />
             </div>
