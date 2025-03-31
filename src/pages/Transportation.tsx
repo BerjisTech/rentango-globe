@@ -329,7 +329,7 @@ const Transportation = () => {
               <img 
                 src="https://www.pngkey.com/png/full/918-9183571_new-2019-mazda-cx-3-touring-2019-mazda.png" 
                 alt="Safe transportation" 
-                className="w-full h-auto rounded-lg bg-gradient-to-t from-blue-500 via-white/50 to-white/0"
+                className="transfor scal-x-[-1] w-full h-auto rounded-lg bg-gradient-to-t from-blue-500 via-white/50 to-white/0"
               />
             </div>
           </div>
