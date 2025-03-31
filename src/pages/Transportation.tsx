@@ -8,43 +8,65 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Check } from "lucide-react";
+import { 
+  ArrowRight, 
+  Check, 
+  Car, 
+  MapPin, 
+  Calendar, 
+  Clock, 
+  Users, 
+  Search,
+  Shield, 
+  CreditCard, 
+  Smile, 
+  ChevronRight
+} from "lucide-react";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Mock popular routes data
 const popularRoutes = [
-  { from: "Nairobi", to: "Mombasa" },
-  { from: "Nairobi", to: "Nakuru" },
-  { from: "Mombasa", to: "Malindi" },
-  { from: "Nairobi", to: "Kisumu" },
-  { from: "Nairobi", to: "Eldoret" },
-  { from: "Kisumu", to: "Kakamega" },
-  { from: "Nairobi", to: "Thika" },
-  { from: "Mombasa", to: "Kilifi" },
-  { from: "Nairobi", to: "Naivasha" },
-  { from: "Nairobi", to: "Kitengela" },
-  { from: "Mombasa", to: "Diani" },
-  { from: "Eldoret", to: "Kitale" }
+  { from: "Los Angeles", to: "San Francisco" },
+  { from: "New York", to: "Boston" },
+  { from: "Birmingham", to: "London" },
+  { from: "Paris", to: "Nice" },
+  { from: "Barcelona", to: "Madrid" },
+  { from: "Berlin", to: "Munich" },
+  { from: "Rome", to: "Milan" },
+  { from: "Amsterdam", to: "Rotterdam" },
+  { from: "Brussels", to: "Paris" }
 ];
 
 // Mock featured vehicles
 const featuredVehicles = [
   { 
     id: "v1", 
-    title: "Luxury Sedan", 
+    title: "Comfort", 
     imageUrl: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     seats: 4
   },
   { 
     id: "v2", 
-    title: "Family SUV", 
+    title: "Premium", 
     imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
     seats: 7
   },
   { 
     id: "v3", 
-    title: "Minibus", 
+    title: "Economy", 
     imageUrl: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    seats: 14
+    seats: 4
+  },
+  { 
+    id: "v4", 
+    title: "Van", 
+    imageUrl: "https://images.unsplash.com/photo-1617469767053-8fd632fca4b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+    seats: 8
   }
 ];
 
@@ -66,120 +88,116 @@ const Transportation = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-blue-600 overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-20" 
-            style={{ backgroundImage: "url(https://images.unsplash.com/photo-1489824904134-891ab64532f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1631&q=80)" }}
-          />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900 to-blue-700 overflow-hidden">
+          <div className="absolute inset-0 rounded-full bg-blue-600/20 blur-3xl w-[80%] h-[80%] mx-auto my-auto" />
         </div>
         
         {/* Hero Content */}
-        <div className="container mx-auto px-4 py-24 md:py-32 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                RIDE SMARTER<br />SAVE TOGETHER
-              </h1>
-              <p className="text-white/80 text-lg mb-8 max-w-lg">
-                Book reliable and affordable transportation services across Kenya with our modern fleet of vehicles.
-              </p>
+        <div className="container mx-auto px-4 py-12 relative z-10">
+          <div className="flex flex-col items-center justify-center text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              RIDE SMARTER SAVE<br />TOGETHER.
+            </h1>
+            
+            <div className="w-full max-w-5xl mx-auto my-8">
+              <img 
+                src="/lovable-uploads/319a98ca-944e-4f1f-aa6e-05f24de4847d.png" 
+                alt="Luxury car" 
+                className="w-full h-auto object-contain"
+              />
             </div>
             
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <Tabs defaultValue="ride" className="w-full mb-6">
-                <TabsList className="grid grid-cols-2 mb-6">
-                  <TabsTrigger value="ride">Book a Ride</TabsTrigger>
-                  <TabsTrigger value="rental">Rent a Vehicle</TabsTrigger>
+            <div className="w-full max-w-5xl bg-white rounded-xl shadow-xl p-4 mt-4">
+              <Tabs defaultValue="ride" className="w-full">
+                <TabsList className="grid grid-cols-4 mb-4">
+                  <TabsTrigger value="ride" className="rounded-full">One-way trip</TabsTrigger>
+                  <TabsTrigger value="round" className="rounded-full">Round trip</TabsTrigger>
+                  <TabsTrigger value="hourly" className="rounded-full">Hourly hire</TabsTrigger>
+                  <TabsTrigger value="airport" className="rounded-full">Airport transfer</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="ride" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Pick-up Location</label>
-                      <Input 
-                        type="text" 
-                        placeholder="Enter pick-up location" 
-                        value={pickup}
-                        onChange={(e) => setPickup(e.target.value)}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                    <div className="p-2 border rounded-lg">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Pick-up Location</label>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 text-blue-500 mr-2" />
+                        <Input 
+                          type="text" 
+                          placeholder="Enter location" 
+                          value={pickup}
+                          onChange={(e) => setPickup(e.target.value)}
+                          className="border-0 p-0 h-6 text-sm focus-visible:ring-0"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Drop-off Location</label>
-                      <Input 
-                        type="text" 
-                        placeholder="Enter drop-off location" 
-                        value={dropoff}
-                        onChange={(e) => setDropoff(e.target.value)}
-                      />
+                    
+                    <div className="p-2 border rounded-lg">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Drop-off Location</label>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 text-blue-500 mr-2" />
+                        <Input 
+                          type="text" 
+                          placeholder="Enter location" 
+                          value={dropoff}
+                          onChange={(e) => setDropoff(e.target.value)}
+                          className="border-0 p-0 h-6 text-sm focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="p-2 border rounded-lg">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Pick-up Date</label>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 text-blue-500 mr-2" />
+                        <Input 
+                          type="date" 
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="border-0 p-0 h-6 text-sm focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="p-2 border rounded-lg">
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Pick-up Time</label>
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 text-blue-500 mr-2" />
+                        <Input 
+                          type="time" 
+                          value={time}
+                          onChange={(e) => setTime(e.target.value)}
+                          className="border-0 p-0 h-6 text-sm focus-visible:ring-0"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="p-2">
+                      <Button onClick={handleSearch} className="w-full h-full bg-blue-600 hover:bg-blue-700 text-white">
+                        Search
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Date</label>
-                      <Input 
-                        type="date" 
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Time</label>
-                      <Input 
-                        type="time" 
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Passengers</label>
-                      <Input 
-                        type="number" 
-                        min="1"
-                        max="30"
-                        value={passengers}
-                        onChange={(e) => setPassengers(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button onClick={handleSearch} className="w-full mt-2">
-                    Search
-                  </Button>
                 </TabsContent>
                 
-                <TabsContent value="rental" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Pick-up Location</label>
-                      <Input 
-                        type="text" 
-                        placeholder="Enter pick-up location" 
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Return Location</label>
-                      <Input 
-                        type="text" 
-                        placeholder="Same as pick-up" 
-                      />
+                <TabsContent value="round" className="space-y-4">
+                  {/* Similar structure for round trip */}
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                    {/* Input fields for round trip */}
+                    <div className="p-2">
+                      <Button onClick={handleSearch} className="w-full h-full bg-blue-600 hover:bg-blue-700 text-white">
+                        Search
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Pick-up Date</label>
-                      <Input type="date" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Return Date</label>
-                      <Input type="date" />
-                    </div>
-                  </div>
-                  
-                  <Button className="w-full mt-2">
-                    Search Vehicles
-                  </Button>
+                </TabsContent>
+                
+                <TabsContent value="hourly" className="space-y-4">
+                  {/* Hourly hire form */}
+                </TabsContent>
+                
+                <TabsContent value="airport" className="space-y-4">
+                  {/* Airport transfer form */}
                 </TabsContent>
               </Tabs>
             </div>
@@ -188,85 +206,110 @@ const Transportation = () => {
       </div>
       
       {/* How It Works Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">
+            How <span className="text-yellow-500 font-bold">It Works</span>
+          </h2>
+          <p className="text-gray-600 text-center max-w-2xl mx-auto mb-12">
+            Experience a seamless journey with our easy-to-use platform. Book, ride, and enjoy the convenience of our service.
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
+            <div className="text-center p-6">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-blue-600 text-xl font-bold">1</span>
+                <Car className="text-blue-600 h-8 w-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Find and book your ride</h3>
               <p className="text-gray-600">
                 Enter your pickup and dropoff locations to find available rides in your area.
               </p>
+              <Button variant="outline" size="sm" className="mt-4 rounded-full">
+                Learn more
+              </Button>
             </div>
             
-            <div className="text-center">
+            <div className="text-center p-6">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-blue-600 text-xl font-bold">2</span>
+                <Users className="text-blue-600 h-8 w-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Travel with top-rated drivers</h3>
               <p className="text-gray-600">
                 Our professional drivers provide safe, reliable, and comfortable transportation.
               </p>
+              <Button variant="outline" size="sm" className="mt-4 rounded-full">
+                Learn more
+              </Button>
             </div>
             
-            <div className="text-center">
+            <div className="text-center p-6">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-blue-600 text-xl font-bold">3</span>
+                <Smile className="text-blue-600 h-8 w-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Arrive safely at your destination</h3>
               <p className="text-gray-600">
                 Track your ride in real-time and enjoy a seamless journey to your destination.
               </p>
+              <Button variant="outline" size="sm" className="mt-4 rounded-full">
+                Learn more
+              </Button>
             </div>
           </div>
         </div>
       </section>
       
       {/* Safety Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">We keep you safe from scams and fraud</h2>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-100 rounded-full p-1 mt-1">
-                    <Check className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Trust, Safety and Transparency</h3>
-                    <p className="text-gray-600">All our drivers are verified and background-checked for your safety.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-100 rounded-full p-1 mt-1">
-                    <Check className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Secure Payment Systems</h3>
-                    <p className="text-gray-600">We use secure payment methods to protect your financial information.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-100 rounded-full p-1 mt-1">
-                    <Check className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Affordable rates for everyone</h3>
-                    <p className="text-gray-600">Competitive pricing with no hidden fees or surprise charges.</p>
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-3xl font-bold mb-6">
+                We help you <span className="text-blue-600">stay safe</span> from scams and fraud
+              </h2>
               
-              <Button className="mt-8">
-                Learn More
-              </Button>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1" className="border border-gray-200 rounded-lg px-4 mb-3">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-blue-100 text-blue-600 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                        •
+                      </Badge>
+                      <span>Trust, Safety and Transparency</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    All our drivers are verified and background-checked for your safety. We ensure transparency in all our operations.
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="item-2" className="border border-gray-200 rounded-lg px-4 mb-3">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-blue-100 text-blue-600 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                        •
+                      </Badge>
+                      <span>Secure Payment Systems</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    We use secure payment methods to protect your financial information. All transactions are encrypted.
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="item-3" className="border border-gray-200 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-blue-100 text-blue-600 h-6 w-6 rounded-full p-0 flex items-center justify-center">
+                        •
+                      </Badge>
+                      <span>Affordable rates for everyone</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    Competitive pricing with no hidden fees or surprise charges. We offer the best rates in the market.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
             
             <div className="relative">
@@ -275,8 +318,12 @@ const Transportation = () => {
                 alt="Safe transportation" 
                 className="w-full h-auto rounded-lg shadow-lg"
               />
-              <div className="absolute -bottom-6 -left-6 bg-blue-600 text-white p-6 rounded-lg shadow-lg max-w-xs">
-                <p className="font-semibold text-lg">All our drivers have passed rigorous safety checks and training</p>
+              <div className="absolute -bottom-6 -right-6 bg-white text-black p-6 rounded-lg shadow-lg max-w-xs">
+                <p className="font-semibold mb-2">Verified Drivers</p>
+                <p className="text-sm text-gray-600 mb-4">All our drivers have passed rigorous safety checks and training</p>
+                <Button size="sm" className="rounded-full">
+                  Learn More
+                </Button>
               </div>
             </div>
           </div>
@@ -284,24 +331,38 @@ const Transportation = () => {
       </section>
       
       {/* Bonus Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <img 
-                src="https://images.unsplash.com/photo-1591639554185-7583ea23ae44?ixlib=rb-4.0.3&auto=format&fit=crop&w=1374&q=80" 
-                alt="Luxury vehicle" 
+                src="https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1374&q=80" 
+                alt="Luxury blue car" 
                 className="w-full h-auto rounded-lg shadow-xl"
               />
             </div>
             
             <div className="order-1 lg:order-2">
-              <h2 className="text-3xl font-bold mb-4">Enjoy a KES 500 carpool bonus for sharing your ride!</h2>
-              <p className="mb-6">
-                When you share your ride with other passengers going in the same direction, you'll receive a KES 500 bonus credit to use on your next booking.
+              <h2 className="text-3xl font-bold text-yellow-500 mb-4">
+                Enjoy a €25 carpool bonus<br/>for sharing your ride!
+              </h2>
+              <p className="mb-6 text-gray-600">
+                When you share your ride with other passengers going in the same direction, you'll receive a €25 bonus credit to use on your next booking.
               </p>
-              <Button variant="secondary" className="bg-white text-blue-700 hover:bg-gray-100">
-                Learn More
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">MINIMUM 2 PEOPLE REQUIRED</p>
+                  <p className="text-lg">€25 per passenger</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">VALID UNTIL JUNE 30, 2024</p>
+                  <p className="text-lg">All destinations</p>
+                </div>
+              </div>
+              
+              <Button className="bg-blue-600 hover:bg-blue-700 rounded-full">
+                Get Started
               </Button>
             </div>
           </div>
@@ -311,15 +372,17 @@ const Transportation = () => {
       {/* Popular Routes Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-2">Plan Your Next Ride</h2>
-          <p className="text-xl text-gray-600 mb-10">Where do you want to go?</p>
+          <h2 className="text-3xl font-bold mb-2">
+            Plan Your Next Ride<span className="text-blue-600">—where</span>
+          </h2>
+          <p className="text-xl text-gray-600 mb-10">do you want to go?</p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {popularRoutes.slice(0, 6).map((route, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Badge className="bg-blue-100 text-blue-700 h-6 w-6 flex items-center justify-center p-0 rounded-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="grid grid-cols-1 gap-4">
+                {popularRoutes.slice(0, 3).map((route, index) => (
+                  <div key={index} className="flex items-center p-2 border rounded-full">
+                    <Badge className="bg-blue-100 text-blue-600 h-6 w-6 flex items-center justify-center p-0 rounded-full mr-3">
                       •
                     </Badge>
                     <span>{route.from} → {route.to}</span>
@@ -328,15 +391,15 @@ const Transportation = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
               {featuredVehicles.map((vehicle, index) => (
                 <Card key={index} className="overflow-hidden">
                   <img 
                     src={vehicle.imageUrl}
                     alt={vehicle.title}
-                    className="h-24 w-full object-cover"
+                    className="h-32 w-full object-cover"
                   />
-                  <CardContent className="p-2 text-center">
+                  <CardContent className="p-3 text-center">
                     <p className="text-sm font-medium">{vehicle.title}</p>
                     <p className="text-xs text-gray-500">{vehicle.seats} seats</p>
                   </CardContent>
@@ -346,7 +409,7 @@ const Transportation = () => {
           </div>
           
           <div className="text-center">
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 rounded-full">
               View All Routes <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -356,30 +419,46 @@ const Transportation = () => {
       {/* Bus Routes Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-6">Our buses take you to more than 300 cities for small prices</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Our buses take you to more than 300 cities<br/>
+            <span className="text-blue-600">for small prices.</span>
+          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <img 
-              src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-              alt="Mini bus" 
-              className="w-full h-48 object-cover rounded-lg"
-            />
-            <img 
-              src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
-              alt="Coach bus" 
-              className="w-full h-48 object-cover rounded-lg md:col-span-2"
-            />
+          <div className="grid grid-cols-4 gap-4 mb-12">
+            <div className="col-span-1">
+              <img 
+                src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="Mini bus" 
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+            <div className="col-span-2">
+              <img 
+                src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="Coach bus" 
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+            <div className="col-span-1">
+              <img 
+                src="https://images.unsplash.com/photo-1464219789935-c2d9d9eb75d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80" 
+                alt="City bus" 
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
           </div>
           
-          <h3 className="text-2xl font-bold mb-6">Discover our top bus destinations</h3>
+          <h3 className="text-2xl font-bold mb-6">
+            Discover our top <span className="text-blue-600">bus destinations</span>
+          </h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {popularRoutes.map((route, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Badge className="bg-blue-100 text-blue-700 h-6 w-6 flex items-center justify-center p-0 rounded-full">
+              <div key={index} className="flex items-center p-2 border rounded-full">
+                <Badge className="bg-blue-100 text-blue-600 h-6 w-6 flex items-center justify-center p-0 rounded-full mr-3">
                   •
                 </Badge>
-                <span className="text-sm">{route.from} → {route.to}</span>
+                <span>{route.from} → {route.to}</span>
               </div>
             ))}
           </div>

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, Home, Building, ArrowRight } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 
 const Hero = () => {
   const navigate = useNavigate();
