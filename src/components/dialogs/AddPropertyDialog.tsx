@@ -28,9 +28,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { HelpCircle } from "lucide-react";
 import * as z from "zod";
 
 type PropertyType = "short-term" | "long-term" | "for-sale";
@@ -51,6 +63,8 @@ const propertyFormSchema = z.object({
   structureType: z.enum(["single", "multiple"]).optional(),
   blockFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
   doorFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
+  blocksPerSet: z.string().optional(),
+  unitsPerBlock: z.string().optional(),
 });
 
 interface AddPropertyDialogProps {
@@ -67,6 +81,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
   const [activeTab, setActiveTab] = useState<string>("basic");
   const [propertyType, setPropertyType] = useState<PropertyType>("short-term");
   const [structureType, setStructureType] = useState<string>("single");
+  const [blockFormat, setBlockFormat] = useState<string>("alphabet");
   
   const form = useForm<z.infer<typeof propertyFormSchema>>({
     resolver: zodResolver(propertyFormSchema),
@@ -79,14 +94,20 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       structureType: "single",
       blockFormat: "alphabet",
       doorFormat: "numeric",
+      blocksPerSet: "",
+      unitsPerBlock: "",
     },
   });
 
   const onSubmit = (data: z.infer<typeof propertyFormSchema>) => {
     try {
+      // Create units based on the format and number of units
+      const generatedUnits = generateUnits(data);
+      
       onAddProperty({
         ...data,
         status: "Active",
+        units: generatedUnits,
       });
       form.reset();
       setActiveTab("basic");
@@ -96,6 +117,99 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       toast.error("Failed to add property. Please try again.");
       console.error("Error adding property:", error);
     }
+  };
+
+  // Function to generate units based on the selected formats and numbers
+  const generateUnits = (data: z.infer<typeof propertyFormSchema>) => {
+    const units = [];
+    
+    if (data.structureType === "single") {
+      // For single buildings, just use door format
+      const numUnits = parseInt(data.unitsPerBlock || "0", 10);
+      
+      for (let i = 1; i <= numUnits; i++) {
+        units.push({
+          id: `unit-${i}`,
+          name: formatDoorName(i, data.doorFormat || "numeric")
+        });
+      }
+    } else if (data.structureType === "multiple") {
+      // For multiple buildings, use block and door format
+      const numBlocksPerSet = parseInt(data.blocksPerSet || "0", 10);
+      const numUnitsPerBlock = parseInt(data.unitsPerBlock || "0", 10);
+      
+      if (data.blockFormat === "alphanumeric") {
+        // Handle alphanumeric blocks (e.g., A1, A2, B1, B2)
+        for (let letter = 0; letter < 26; letter++) {
+          const blockLetter = String.fromCharCode(65 + letter); // A, B, C, ...
+          
+          for (let blockNum = 1; blockNum <= numBlocksPerSet; blockNum++) {
+            const blockName = `${blockLetter}${blockNum}`;
+            
+            for (let doorNum = 1; doorNum <= numUnitsPerBlock; doorNum++) {
+              const doorName = formatDoorName(doorNum, data.doorFormat || "numeric");
+              units.push({
+                id: `${blockName}-${doorNum}`,
+                name: `${blockName} - ${doorName}`,
+                block: blockName,
+                door: doorName
+              });
+            }
+          }
+        }
+      } else {
+        // Handle regular blocks (alphabet or numeric)
+        const totalBlocks = numBlocksPerSet;
+        
+        for (let blockIdx = 1; blockIdx <= totalBlocks; blockIdx++) {
+          const blockName = formatBlockName(blockIdx, data.blockFormat || "alphabet");
+          
+          for (let doorIdx = 1; doorIdx <= numUnitsPerBlock; doorIdx++) {
+            const doorName = formatDoorName(doorIdx, data.doorFormat || "numeric");
+            units.push({
+              id: `${blockName}-${doorIdx}`,
+              name: `${blockName} - ${doorName}`,
+              block: blockName,
+              door: doorName
+            });
+          }
+        }
+      }
+    }
+    
+    return units;
+  };
+  
+  const formatBlockName = (index: number, format: string): string => {
+    if (format === "alphabet") {
+      // A, B, C, ...
+      return String.fromCharCode(64 + index);
+    } else if (format === "numeric") {
+      // 1, 2, 3, ...
+      return String(index);
+    }
+    return String(index);
+  };
+  
+  const formatDoorName = (index: number, format: string): string => {
+    if (format === "alphabet") {
+      // A, B, C, ...
+      return String.fromCharCode(64 + index);
+    } else if (format === "numeric") {
+      // 1, 2, 3, ...
+      return String(index);
+    } else if (format === "alphanumeric") {
+      // A1, B2, C3, ...
+      const letter = String.fromCharCode(64 + Math.ceil(index / 26));
+      return `${letter}${index}`;
+    }
+    return String(index);
+  };
+  
+  const formatHelpText = {
+    alphabet: "Uses letters (A, B, C...) for naming blocks or doors.",
+    numeric: "Uses numbers (1, 2, 3...) for naming blocks or doors.",
+    alphanumeric: "Uses a combination of letters and numbers (A1, B2, C3...) for naming blocks or doors."
   };
 
   return (
@@ -260,9 +374,33 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                           name="blockFormat"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Block Naming Format</FormLabel>
+                              <div className="flex items-center space-x-2">
+                                <FormLabel>Block Naming Format</FormLabel>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                                        <HelpCircle className="h-4 w-4" />
+                                        <span className="sr-only">Block format info</span>
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="max-w-xs">
+                                      <p>{formatHelpText[field.value as keyof typeof formatHelpText]}</p>
+                                      <p className="mt-2 text-xs">Examples:</p>
+                                      <ul className="list-disc pl-4 text-xs">
+                                        <li>Alphabet: Block A, Block B, Block C</li>
+                                        <li>Numeric: Block 1, Block 2, Block 3</li>
+                                        <li>Alphanumeric: Block A1, Block A2, Block B1</li>
+                                      </ul>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               <Select 
-                                onValueChange={field.onChange}
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  setBlockFormat(value);
+                                }}
                                 defaultValue={field.value}
                               >
                                 <FormControl>
@@ -283,6 +421,42 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                             </FormItem>
                           )}
                         />
+
+                        {blockFormat === "alphanumeric" ? (
+                          <FormField
+                            control={form.control}
+                            name="blocksPerSet"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Number of Blocks per Set (e.g., A1-A4 is 4 blocks in set A)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="1" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  How many blocks are in each alphabetic set? (e.g., A1-A4 is 4 blocks)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ) : (
+                          <FormField
+                            control={form.control}
+                            name="blocksPerSet"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Total Number of Blocks</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="1" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Total number of blocks in your property
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </>
                     )}
                     
@@ -291,7 +465,40 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                       name="doorFormat"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Door/Unit Naming Format</FormLabel>
+                          <div className="flex items-center space-x-2">
+                            <FormLabel>Door/Unit Naming Format</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent side="right" className="w-80">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium">Door/Unit Naming Formats</h4>
+                                  <p className="text-sm">Choose how individual units or doors are named in your property:</p>
+                                  
+                                  <div className="rounded-md bg-muted p-3">
+                                    <h5 className="font-medium">Alphabetic (A, B, C...)</h5>
+                                    <p className="text-xs text-muted-foreground">Uses letters for doors.</p>
+                                    <p className="text-xs mt-1">Example: Door A, Door B, Door C</p>
+                                  </div>
+                                  
+                                  <div className="rounded-md bg-muted p-3">
+                                    <h5 className="font-medium">Numeric (1, 2, 3...)</h5>
+                                    <p className="text-xs text-muted-foreground">Uses numbers for doors.</p>
+                                    <p className="text-xs mt-1">Example: Door 1, Door 2, Door 3</p>
+                                  </div>
+                                  
+                                  <div className="rounded-md bg-muted p-3">
+                                    <h5 className="font-medium">Alphanumeric (A1, B2...)</h5>
+                                    <p className="text-xs text-muted-foreground">Uses a combination of letters and numbers.</p>
+                                    <p className="text-xs mt-1">Example: Door A1, Door B2, Door C3</p>
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                           <Select 
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -309,6 +516,29 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                           </Select>
                           <FormDescription>
                             How are individual doors or units named?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="unitsPerBlock"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {structureType === "single" 
+                              ? "Total Number of Units/Doors" 
+                              : "Number of Units/Doors per Block"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="number" min="1" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            {structureType === "single"
+                              ? "How many total units or doors are in your property?"
+                              : "How many units or doors are in each block?"}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -336,6 +566,18 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                                                   (form.watch("doorFormat") === "alphabet" ? "Block A1 - Door A, Block B2 - Door B..." : 
                                                    form.watch("doorFormat") === "numeric" ? "Block A1 - Door 1, Block B2 - Door 2..." : 
                                                    "Block A1 - Door A1, Block B2 - Door B2...")}
+                        </p>
+                      )}
+
+                      {(form.watch("blocksPerSet") && form.watch("unitsPerBlock")) && (
+                        <p className="mt-2 text-sm">
+                          This will generate a total of {
+                            structureType === "single" 
+                              ? parseInt(form.watch("unitsPerBlock") || "0") 
+                              : blockFormat === "alphanumeric"
+                                ? 26 * parseInt(form.watch("blocksPerSet") || "0") * parseInt(form.watch("unitsPerBlock") || "0")
+                                : parseInt(form.watch("blocksPerSet") || "0") * parseInt(form.watch("unitsPerBlock") || "0")
+                          } units.
                         </p>
                       )}
                     </div>
