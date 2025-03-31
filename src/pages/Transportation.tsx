@@ -88,8 +88,14 @@ const Transportation = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-900 to-blue-700 overflow-hidden">
-          <div className="absolute inset-0 rounded-full bg-blue-600/20 blur-3xl w-[80%] h-[80%] mx-auto my-auto" />
+        <div className="absolute inset-0 bg-black overflow-hidden">
+          {/* Dark showroom gradient effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-800 opacity-95" />
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1494891848038-7bd202a2afeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=3847&q=80')] bg-cover bg-center opacity-30 mix-blend-overlay" />
+          
+          {/* Elegant spotlight effect */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full bg-gradient-to-b from-zinc-200/5 to-transparent blur-3xl opacity-30" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black to-transparent" />
         </div>
         
         {/* Hero Content */}
