@@ -88,7 +88,7 @@ const Transportation = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 bg-black overflow-hidden">
+        <div className="absolute inset-0 bg-black/50 overflow-hidden">
           {/* Dark showroom gradient effect */}
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-800 opacity-[.5]" />
           <div className="absolute inset-0 bg-[url('https://i.pinimg.com/736x/0e/cf/e7/0ecfe78f16e734d5b43d60251194654b.jpg')] bg-cover bg-center opacity-[.3] mix-blend-overlay" />
