@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { PlusCircle, Search, Building, Edit, Trash, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { Property } from "@/types/admin";
 
 // Define the form schema
 const propertyFormSchema = z.object({
@@ -26,18 +25,6 @@ const propertyFormSchema = z.object({
 });
 
 type PropertyFormValues = z.infer<typeof propertyFormSchema>;
-
-// Property interface
-interface Property {
-  id: string;
-  name: string;
-  location: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  type: string;
-  created_at: string;
-}
 
 const AdminProperties = () => {
   const [searchQuery, setSearchQuery] = useState("");

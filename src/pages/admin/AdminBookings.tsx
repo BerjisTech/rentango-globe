@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,31 +5,25 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Search, Calendar, DollarSign, CheckCircle, XCircle, AlertCircle, 
+  Clock, Filter, Loader2, ArrowUpDown, FileText, Eye
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Search, CreditCard, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-
-// Booking interface
-interface Booking {
-  id: string;
-  user_id: string;
-  user_email?: string;
-  property_id?: string;
-  vehicle_id?: string;
-  item_name: string;
-  booking_type: "property" | "vehicle";
-  start_date: string;
-  end_date: string;
-  total_amount: number;
-  payment_status: "pending" | "completed" | "failed" | "refunded";
-  created_at: string;
-}
+import { format } from 'date-fns';
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Booking } from "@/types/admin";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const AdminBookings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
 
   // Fetch bookings from Supabase
   const { data: bookings, isLoading, refetch } = useQuery({
@@ -38,12 +31,7 @@ const AdminBookings = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select(`
-          *,
-          profiles:user_id (
-            email
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
       
       if (error) {
@@ -55,26 +43,23 @@ const AdminBookings = () => {
         return [];
       }
       
-      // Transform the data to match our interface
-      return data.map((booking: any) => ({
-        ...booking,
-        user_email: booking.profiles?.email || "Unknown"
-      })) as Booking[];
+      return data as Booking[];
     }
   });
 
-  const updatePaymentStatus = async (bookingId: string, newStatus: Booking["payment_status"]) => {
+  // Function to update booking status
+  const updateBookingStatus = async (bookingId: string, status: string) => {
     try {
       const { error } = await supabase
         .from("bookings")
-        .update({ payment_status: newStatus })
+        .update({ payment_status: status })
         .eq("id", bookingId);
       
       if (error) throw error;
       
       toast({
         title: "Status updated",
-        description: `Payment status successfully changed to ${newStatus}`
+        description: `Booking has been marked as ${status}.`
       });
       
       refetch();
@@ -87,73 +72,52 @@ const AdminBookings = () => {
     }
   };
 
-  // Filter and sort bookings
-  const filteredBookings = bookings
-    ?.filter(booking => 
-      (statusFilter ? booking.payment_status === statusFilter : true) &&
-      (searchQuery ? 
-        booking.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.user_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.id.toLowerCase().includes(searchQuery.toLowerCase())
-        : true
-      )
-    );
+  // Filter bookings based on search query and filters
+  const filteredBookings = bookings?.filter(booking => {
+    // Search filter
+    const matchesSearch = 
+      booking.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Status filter
+    const matchesStatus = !statusFilter || booking.payment_status === statusFilter;
+    
+    // Type filter
+    const matchesType = !typeFilter || booking.booking_type === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
-  // Get total revenue stats
-  const completedBookingsAmount = bookings
-    ?.filter(booking => booking.payment_status === "completed")
-    .reduce((sum, booking) => sum + booking.total_amount, 0) || 0;
-
-  const pendingBookingsAmount = bookings
-    ?.filter(booking => booking.payment_status === "pending")
-    .reduce((sum, booking) => sum + booking.total_amount, 0) || 0;
+  // Get status badge for different booking statuses
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <Badge className="bg-green-500">Completed</Badge>;
+      case "pending":
+        return <Badge variant="outline" className="text-amber-600 border-amber-600">Pending</Badge>;
+      case "failed":
+        return <Badge variant="destructive">Failed</Badge>;
+      case "refunded":
+        return <Badge variant="secondary">Refunded</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   return (
     <AdminLayout activeTab="bookings">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Bookings & Payments</h1>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Revenue</CardTitle>
-              <CardDescription>Completed payments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">${completedBookingsAmount.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Pending Revenue</CardTitle>
-              <CardDescription>Payments awaiting completion</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-amber-500">${pendingBookingsAmount.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Bookings</CardTitle>
-              <CardDescription>All-time bookings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{bookings?.length || 0}</div>
-            </CardContent>
-          </Card>
+          <h1 className="text-3xl font-bold">Bookings Management</h1>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Transactions Overview</CardTitle>
-            <CardDescription>Manage all bookings and payments on the platform</CardDescription>
+            <CardTitle>Bookings Overview</CardTitle>
+            <CardDescription>Manage all bookings made on the platform</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -164,43 +128,27 @@ const AdminBookings = () => {
                 />
               </div>
               
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  variant={statusFilter === null ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setStatusFilter(null)}
-                >
-                  All
-                </Button>
-                <Button 
-                  variant={statusFilter === "pending" ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setStatusFilter("pending")}
-                >
-                  Pending
-                </Button>
-                <Button 
-                  variant={statusFilter === "completed" ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setStatusFilter("completed")}
-                >
-                  Completed
-                </Button>
-                <Button 
-                  variant={statusFilter === "failed" ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setStatusFilter("failed")}
-                >
-                  Failed
-                </Button>
-                <Button 
-                  variant={statusFilter === "refunded" ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => setStatusFilter("refunded")}
-                >
-                  Refunded
-                </Button>
-              </div>
+              <Select onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="refunded">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="property">Property</SelectItem>
+                  <SelectItem value="vehicle">Vehicle</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {isLoading ? (
@@ -211,11 +159,11 @@ const AdminBookings = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Item</TableHead>
+                    <TableHead>Booking ID</TableHead>
+                    <TableHead>Item Name</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Dates</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -224,62 +172,40 @@ const AdminBookings = () => {
                 <TableBody>
                   {filteredBookings.map((booking) => (
                     <TableRow key={booking.id}>
-                      <TableCell className="font-mono text-xs">
-                        {booking.id.substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-medium">{booking.item_name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {booking.booking_type === "property" ? "Property" : "Vehicle"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{booking.user_email}</TableCell>
-                      <TableCell className="text-xs">
-                        {format(new Date(booking.start_date), "MMM d, yyyy")} - 
-                        {format(new Date(booking.end_date), "MMM d, yyyy")}
-                      </TableCell>
+                      <TableCell className="font-medium">{booking.id}</TableCell>
+                      <TableCell>{booking.item_name}</TableCell>
+                      <TableCell>{booking.booking_type}</TableCell>
+                      <TableCell>{format(new Date(booking.start_date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell>{format(new Date(booking.end_date), 'MMM d, yyyy')}</TableCell>
                       <TableCell>${booking.total_amount.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            booking.payment_status === "completed" ? "default" :
-                            booking.payment_status === "pending" ? "outline" :
-                            booking.payment_status === "refunded" ? "secondary" : "destructive"
-                          }
-                        >
-                          {booking.payment_status}
-                        </Badge>
-                      </TableCell>
+                      <TableCell>{getStatusBadge(booking.payment_status)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          {booking.payment_status === "pending" && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => updatePaymentStatus(booking.id, "completed")}
-                              >
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => updatePaymentStatus(booking.id, "failed")}
-                              >
-                                <XCircle className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </>
-                          )}
-                          {booking.payment_status === "completed" && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => updatePaymentStatus(booking.id, "refunded")}
-                            >
-                              Refund
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => updateBookingStatus(booking.id, "completed")}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Mark as Completed
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateBookingStatus(booking.id, "pending")}>
+                              <Clock className="mr-2 h-4 w-4" />
+                              Mark as Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateBookingStatus(booking.id, "failed")}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Mark as Failed
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateBookingStatus(booking.id, "refunded")}>
+                              <AlertCircle className="mr-2 h-4 w-4" />
+                              Mark as Refunded
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -287,10 +213,10 @@ const AdminBookings = () => {
               </Table>
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">No bookings found</h3>
                 <p className="text-muted-foreground mt-1">
-                  {searchQuery || statusFilter ? "Try different search terms or filters" : "Bookings will appear here once created"}
+                  {searchQuery ? "Try a different search term" : "No bookings have been made yet"}
                 </p>
               </div>
             )}

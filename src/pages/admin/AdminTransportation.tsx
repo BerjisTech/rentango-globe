@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,32 +12,20 @@ import { toast } from "@/hooks/use-toast";
 import { PlusCircle, Search, Car, Edit, Trash, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { Vehicle } from "@/types/admin";
 
 // Define the form schema
 const vehicleFormSchema = z.object({
   name: z.string().min(3, "Vehicle name must be at least 3 characters"),
   model: z.string().min(2, "Model must be at least 2 characters"),
-  year: z.coerce.number().int().min(1900).max(new Date().getFullYear() + 1),
+  year: z.coerce.number().int().min(1950).max(new Date().getFullYear() + 1, "Year must be valid"),
   price_per_day: z.coerce.number().positive("Price must be a positive number"),
-  seats: z.coerce.number().int().positive("Seats must be a positive integer"),
+  seats: z.coerce.number().int().min(1, "Seats must be at least 1"),
   transmission: z.string().min(1, "Transmission type is required"),
   fuel_type: z.string().min(1, "Fuel type is required")
 });
 
 type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
-
-// Vehicle interface
-interface Vehicle {
-  id: string;
-  name: string;
-  model: string;
-  year: number;
-  price_per_day: number;
-  seats: number;
-  transmission: string;
-  fuel_type: string;
-  created_at: string;
-}
 
 const AdminTransportation = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,9 +38,9 @@ const AdminTransportation = () => {
       model: "",
       year: new Date().getFullYear(),
       price_per_day: 0,
-      seats: 5,
+      seats: 4,
       transmission: "Automatic",
-      fuel_type: "Gasoline"
+      fuel_type: "Petrol"
     }
   });
 
@@ -169,7 +155,7 @@ const AdminTransportation = () => {
                         <FormItem>
                           <FormLabel>Year</FormLabel>
                           <FormControl>
-                            <Input type="number" min="1900" max={new Date().getFullYear() + 1} {...field} />
+                            <Input type="number" min="1950" max={new Date().getFullYear() + 1} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

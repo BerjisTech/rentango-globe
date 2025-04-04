@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_type: string
+          created_at: string
+          end_date: string
+          id: string
+          item_name: string
+          payment_status: string
+          property_id: string | null
+          start_date: string
+          total_amount: number
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          booking_type: string
+          created_at?: string
+          end_date: string
+          id?: string
+          item_name: string
+          payment_status: string
+          property_id?: string | null
+          start_date: string
+          total_amount: number
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          booking_type?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          item_name?: string
+          payment_status?: string
+          property_id?: string | null
+          start_date?: string
+          total_amount?: number
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string | null
@@ -39,6 +96,48 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          booking_fee_percentage: number | null
+          contact_email: string | null
+          created_at: string
+          enable_instant_booking: boolean | null
+          id: string
+          maintenance_mode: boolean | null
+          site_description: string | null
+          site_name: string
+          support_phone: string | null
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          booking_fee_percentage?: number | null
+          contact_email?: string | null
+          created_at?: string
+          enable_instant_booking?: boolean | null
+          id?: string
+          maintenance_mode?: boolean | null
+          site_description?: string | null
+          site_name: string
+          support_phone?: string | null
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          booking_fee_percentage?: number | null
+          contact_email?: string | null
+          created_at?: string
+          enable_instant_booking?: boolean | null
+          id?: string
+          maintenance_mode?: boolean | null
+          site_description?: string | null
+          site_name?: string
+          support_phone?: string | null
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -66,6 +165,39 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          bathrooms: number
+          bedrooms: number
+          created_at: string
+          id: string
+          location: string
+          name: string
+          price: number
+          type: string
+        }
+        Insert: {
+          bathrooms: number
+          bedrooms: number
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          price: number
+          type: string
+        }
+        Update: {
+          bathrooms?: number
+          bedrooms?: number
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          price?: number
+          type?: string
         }
         Relationships: []
       }
@@ -125,6 +257,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          created_at: string
+          fuel_type: string
+          id: string
+          model: string
+          name: string
+          price_per_day: number
+          seats: number
+          transmission: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          fuel_type: string
+          id?: string
+          model: string
+          name: string
+          price_per_day: number
+          seats: number
+          transmission: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          fuel_type?: string
+          id?: string
+          model?: string
+          name?: string
+          price_per_day?: number
+          seats?: number
+          transmission?: string
+          year?: number
         }
         Relationships: []
       }
