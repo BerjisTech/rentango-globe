@@ -1,57 +1,36 @@
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
 import { PlusCircle, Search, Building, Edit, Trash, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/types/admin";
-
-// Define the form schema
-const propertyFormSchema = z.object({
-  name: z.string().min(3, "Property name must be at least 3 characters"),
-  location: z.string().min(3, "Location must be at least 3 characters"),
-  price: z.coerce.number().positive("Price must be a positive number"),
-  bedrooms: z.coerce.number().int().positive("Bedrooms must be a positive integer"),
-  bathrooms: z.coerce.number().positive("Bathrooms must be a positive number"),
-  type: z.string().min(1, "Property type is required")
-});
-
-type PropertyFormValues = z.infer<typeof propertyFormSchema>;
+import AddPropertyDialog from "@/components/dialogs/AddPropertyDialog";
 
 const AdminProperties = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingProperty, setIsAddingProperty] = useState(false);
-
-  const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(propertyFormSchema),
-    defaultValues: {
-      name: "",
-      location: "",
-      price: 0,
-      bedrooms: 1,
-      bathrooms: 1,
-      type: "Apartment"
-    }
-  });
+  const queryClient = useQueryClient();
 
   // Fetch properties from Supabase
-  const { data: properties, isLoading, refetch } = useQuery({
+  const { data: properties, isLoading } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("properties")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        
+        return data as Property[];
+      } catch (error: any) {
         toast({
           title: "Error fetching properties",
           description: error.message,
@@ -59,34 +38,53 @@ const AdminProperties = () => {
         });
         return [];
       }
-      
-      return data as Property[];
     }
   });
 
-  const handleAddProperty = async (values: PropertyFormValues) => {
-    try {
-      const { error } = await supabase
-        .from("properties")
-        .insert([values]);
-      
-      if (error) throw error;
-      
+  // Create a mutation for adding properties
+  const addPropertyMutation = useMutation({
+    mutationFn: async (property: any) => {
+      try {
+        // Transform the property data to match our database schema
+        const propertyData = {
+          name: property.title,
+          location: property.location,
+          price: parseFloat(property.price),
+          bedrooms: property.units?.length || 0,
+          bathrooms: Math.ceil(property.units?.length / 2) || 1, // Just a simple calculation for now
+          type: property.type === 'for-sale' ? 'Sale' : property.type === 'long-term' ? 'Long Term Rental' : 'Short Term Rental'
+        };
+
+        const { error } = await supabase
+          .from("properties")
+          .insert([propertyData]);
+        
+        if (error) throw error;
+        
+        return propertyData;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
       toast({
         title: "Property added",
         description: "The property has been successfully added."
       });
-      
       setIsAddingProperty(false);
-      form.reset();
-      refetch();
-    } catch (error: any) {
+    },
+    onError: (error: Error) => {
       toast({
         title: "Error adding property",
         description: error.message,
         variant: "destructive"
       });
     }
+  });
+
+  const handleAddProperty = (property: any) => {
+    addPropertyMutation.mutate(property);
   };
 
   // Filter properties based on search query
@@ -101,115 +99,17 @@ const AdminProperties = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Properties Management</h1>
-          <Button onClick={() => setIsAddingProperty(!isAddingProperty)}>
-            {isAddingProperty ? "Cancel" : "Add Property"}
-            {!isAddingProperty && <PlusCircle className="ml-2 h-4 w-4" />}
+          <Button onClick={() => setIsAddingProperty(true)}>
+            Add Property
+            <PlusCircle className="ml-2 h-4 w-4" />
           </Button>
         </div>
         
-        {isAddingProperty && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Add New Property</CardTitle>
-              <CardDescription>Fill in the details to add a new property to the platform</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleAddProperty)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Property Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Beach Villa" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Miami, FL" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price per night ($)</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="0" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Property Type</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Apartment, Villa, House..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="bedrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bedrooms</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="0" step="1" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="bathrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bathrooms</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="0" step="0.5" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end mt-4">
-                    <Button type="submit">Add Property</Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        )}
+        <AddPropertyDialog 
+          open={isAddingProperty} 
+          onOpenChange={setIsAddingProperty} 
+          onAddProperty={handleAddProperty} 
+        />
         
         <Card>
           <CardHeader>
@@ -241,7 +141,7 @@ const AdminProperties = () => {
                     <TableHead>Location</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Bedrooms</TableHead>
-                    <TableHead>Price/Night</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
