@@ -178,7 +178,7 @@ const AdminReports = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPieChart>
+                  <PieChart>
                     <Pie
                       data={bookingDistributionData}
                       dataKey="value"
@@ -195,7 +195,7 @@ const AdminReports = () => {
                     </Pie>
                     <Tooltip />
                     <Legend />
-                  </RechartsPieChart>
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -209,7 +209,7 @@ const AdminReports = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -217,7 +217,7 @@ const AdminReports = () => {
                     <Legend />
                     <Line type="monotone" dataKey="properties" stroke="#8884d8" name="Properties Bookings" />
                     <Line type="monotone" dataKey="vehicles" stroke="#82ca9d" name="Vehicles Bookings" />
-                  </RechartsLineChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -231,13 +231,13 @@ const AdminReports = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={userGrowthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <LineChart data={userGrowthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="users" stroke="#8884d8" name="New Users" />
-                  </RechartsLineChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
