@@ -1,4 +1,5 @@
 
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,11 @@ import Properties from "./pages/Properties";
 import Transportation from "./pages/Transportation";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminProperties from "./pages/admin/AdminProperties";
+import AdminTransportation from "./pages/admin/AdminTransportation";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminSettings from "./pages/admin/AdminSettings";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -43,6 +49,11 @@ const App = () => (
             
             <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/admin-dashboard/properties" element={<AdminProperties />} />
+              <Route path="/admin-dashboard/transportation" element={<AdminTransportation />} />
+              <Route path="/admin-dashboard/bookings" element={<AdminBookings />} />
+              <Route path="/admin-dashboard/reports" element={<AdminReports />} />
+              <Route path="/admin-dashboard/settings" element={<AdminSettings />} />
             </Route>
             
             {/* Catch-all route */}

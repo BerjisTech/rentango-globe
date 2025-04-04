@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -33,11 +33,12 @@ import {
   ChevronLeft,
   Menu,
   LayoutDashboard,
-  Flag 
+  Flag,
+  CreditCard,
+  Database 
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -46,6 +47,16 @@ const AdminDashboard = () => {
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+
+  const sidebarItems = [
+    { id: "overview", icon: <LayoutDashboard className="h-5 w-5" />, label: "Dashboard", path: "/admin-dashboard" },
+    { id: "users", icon: <Users className="h-5 w-5" />, label: "Users", path: "/admin-dashboard" },
+    { id: "properties", icon: <Database className="h-5 w-5" />, label: "Properties", path: "/admin-dashboard/properties" },
+    { id: "transportation", icon: <Car className="h-5 w-5" />, label: "Transportation", path: "/admin-dashboard/transportation" },
+    { id: "bookings", icon: <CreditCard className="h-5 w-5" />, label: "Bookings & Payments", path: "/admin-dashboard/bookings" },
+    { id: "reports", icon: <BarChart className="h-5 w-5" />, label: "Reports", path: "/admin-dashboard/reports" },
+    { id: "settings", icon: <Settings className="h-5 w-5" />, label: "Settings", path: "/admin-dashboard/settings" },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -69,96 +80,38 @@ const AdminDashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Responsive Sidebar */}
-          <Collapsible 
-            open={!sidebarCollapsed} 
-            onOpenChange={(open) => setSidebarCollapsed(!open)}
-            className={cn(
-              "lg:col-span-1",
-              sidebarCollapsed && "lg:col-span-0"
-            )}
-          >
-            <div className="block lg:hidden mb-4">
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  <span>Dashboard Navigation</span>
-                  <ChevronLeft className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    !sidebarCollapsed && "rotate-90"
-                  )} />
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-            
-            <CollapsibleContent className="lg:block">
-              <Card className="glass-card border-0 shadow-lg">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">Admin Panel</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <nav className="flex flex-col">
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "overview" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("overview")}
+          <div className={cn(
+            "lg:block col-span-1 transition-all duration-300",
+            sidebarCollapsed ? "lg:w-16" : "lg:w-full"
+          )}>
+            <Card className="glass-card border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  {!sidebarCollapsed && <CardTitle className="text-lg">Admin Panel</CardTitle>}
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <nav className="flex flex-col">
+                  {sidebarItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === item.id ? "bg-primary/10 font-medium text-primary" : ""}`}
+                      onClick={() => setActiveTab(item.id)}
                     >
-                      <LayoutDashboard className="h-5 w-5" />
-                      <span>Dashboard</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "users" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("users")}
-                    >
-                      <Users className="h-5 w-5" />
-                      <span>Users</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "properties" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("properties")}
-                    >
-                      <House className="h-5 w-5" />
-                      <span>Properties</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "transportation" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("transportation")}
-                    >
-                      <Car className="h-5 w-5" />
-                      <span>Transportation</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "bookings" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("bookings")}
-                    >
-                      <DollarSign className="h-5 w-5" />
-                      <span>Bookings & Payments</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "reports" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("reports")}
-                    >
-                      <Flag className="h-5 w-5" />
-                      <span>Reports</span>
-                    </button>
-                    <button 
-                      className={`flex items-center gap-3 p-4 text-left hover:bg-primary/5 transition-colors rounded-lg ${activeTab === "settings" ? "bg-primary/10 font-medium text-primary" : ""}`}
-                      onClick={() => setActiveTab("settings")}
-                    >
-                      <Settings className="h-5 w-5" />
-                      <span>Settings</span>
-                    </button>
-                  </nav>
-                </CardContent>
-              </Card>
-            </CollapsibleContent>
-          </Collapsible>
+                      {item.icon}
+                      {!sidebarCollapsed && <span>{item.label}</span>}
+                    </Link>
+                  ))}
+                </nav>
+              </CardContent>
+            </Card>
+          </div>
           
-          {/* Main Content */}
           <div className={cn(
             "transition-all duration-300",
-            sidebarCollapsed ? "lg:col-span-5" : "lg:col-span-4"
+            sidebarCollapsed ? "lg:col-span-4" : "lg:col-span-4"
           )}>
             {activeTab === "overview" && (
               <div className="space-y-6 animate-fade-in">
