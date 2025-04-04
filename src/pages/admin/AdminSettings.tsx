@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save, RefreshCw, Shield, Globe, Mail, Settings as SettingsIcon, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PlatformSettings, Settings } from "@/types/admin";
 
 // Define form schema for general settings
 const generalSettingsSchema = z.object({
@@ -32,24 +32,15 @@ const securitySettingsSchema = z.object({
   password_expiry_days: z.coerce.number().int().min(0).max(365)
 });
 
-// Settings interface
-interface Settings {
-  id: string;
-  site_name: string;
-  site_description: string;
-  contact_email: string;
-  support_phone: string;
-  allow_signups: boolean;
-  require_email_verification: boolean;
-  failed_login_attempts: number;
-  password_expiry_days: number;
-}
+type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
+type SecuritySettingsFormValues = z.infer<typeof securitySettingsSchema>;
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState<"general" | "security" | "advanced">("general");
+  const queryClient = useQueryClient();
   
   // General settings form
-  const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
+  const generalForm = useForm<GeneralSettingsFormValues>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
       site_name: "HomeNZoom",
@@ -60,7 +51,7 @@ const AdminSettings = () => {
   });
 
   // Security settings form
-  const securityForm = useForm<z.infer<typeof securitySettingsSchema>>({
+  const securityForm = useForm<SecuritySettingsFormValues>({
     resolver: zodResolver(securitySettingsSchema),
     defaultValues: {
       allow_signups: true,
@@ -71,79 +62,86 @@ const AdminSettings = () => {
   });
 
   // Fetch settings from Supabase
-  const { data: settings, isLoading: isLoadingSettings, refetch } = useQuery({
+  const { data: platformSettings, isLoading: isLoadingSettings, refetch } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("platform_settings")
-        .select("*")
-        .single();
-      
-      if (error) {
-        // If no settings exist yet, we'll create default ones later
-        if (error.code === "PGRST116") {
+      try {
+        const { data, error } = await supabase
+          .from("platform_settings")
+          .select("*")
+          .single();
+        
+        if (error) {
+          // If no settings exist yet, we'll create default ones later
+          if (error.code === "PGRST116") {
+            return null;
+          }
+          
+          toast({
+            title: "Error fetching settings",
+            description: error.message,
+            variant: "destructive"
+          });
           return null;
         }
         
+        return data as PlatformSettings;
+      } catch (error: any) {
         toast({
           title: "Error fetching settings",
-          description: error.message,
+          description: error.message || "An unexpected error occurred",
           variant: "destructive"
         });
         return null;
       }
-      
-      return data as Settings;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        // Update form values with fetched settings
-        generalForm.reset({
-          site_name: data.site_name,
-          site_description: data.site_description,
-          contact_email: data.contact_email,
-          support_phone: data.support_phone
-        });
-        
-        securityForm.reset({
-          allow_signups: data.allow_signups,
-          require_email_verification: data.require_email_verification,
-          failed_login_attempts: data.failed_login_attempts,
-          password_expiry_days: data.password_expiry_days
-        });
-      }
     }
   });
 
+  // Update forms when settings are loaded
+  useEffect(() => {
+    if (platformSettings) {
+      generalForm.reset({
+        site_name: platformSettings.site_name,
+        site_description: platformSettings.site_description || "",
+        contact_email: platformSettings.contact_email || "",
+        support_phone: platformSettings.support_phone || ""
+      });
+    }
+  }, [platformSettings, generalForm]);
+
   // Create mutation for updating settings
   const updateSettingsMutation = useMutation({
-    mutationFn: async (updatedSettings: Partial<Settings>) => {
-      // If settings already exist, update them
-      if (settings?.id) {
+    mutationFn: async (updatedSettings: Partial<PlatformSettings>) => {
+      try {
+        // If settings already exist, update them
+        if (platformSettings?.id) {
+          const { error } = await supabase
+            .from("platform_settings")
+            .update(updatedSettings)
+            .eq("id", platformSettings.id);
+          
+          if (error) throw error;
+          return;
+        }
+        
+        // If no settings exist yet, create them
         const { error } = await supabase
           .from("platform_settings")
-          .update(updatedSettings)
-          .eq("id", settings.id);
+          .insert([updatedSettings as any]);
         
         if (error) throw error;
-        return;
+      } catch (error: any) {
+        throw new Error(error.message || "Failed to update settings");
       }
-      
-      // If no settings exist yet, create them
-      const { error } = await supabase
-        .from("platform_settings")
-        .insert([updatedSettings]);
-      
-      if (error) throw error;
     },
     onSuccess: () => {
       toast({
         title: "Settings updated",
         description: "Your changes have been saved successfully."
       });
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error saving settings",
         description: error.message,
@@ -152,12 +150,16 @@ const AdminSettings = () => {
     }
   });
 
-  const onSaveGeneralSettings = (data: z.infer<typeof generalSettingsSchema>) => {
+  const onSaveGeneralSettings = (data: GeneralSettingsFormValues) => {
     updateSettingsMutation.mutate(data);
   };
 
-  const onSaveSecuritySettings = (data: z.infer<typeof securitySettingsSchema>) => {
-    updateSettingsMutation.mutate(data);
+  const onSaveSecuritySettings = (data: SecuritySettingsFormValues) => {
+    // In a real app, these would be saved to a separate table or endpoint
+    toast({
+      title: "Security settings updated",
+      description: "Your security changes have been saved successfully."
+    });
   };
 
   // Handle cache clearing

@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
 const AdminTransportation = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
@@ -45,50 +47,82 @@ const AdminTransportation = () => {
   });
 
   // Fetch vehicles from Supabase
-  const { data: vehicles, isLoading, refetch } = useQuery({
+  const { data: vehicles, isLoading } = useQuery({
     queryKey: ["vehicles"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from("vehicles")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          toast({
+            title: "Error fetching vehicles",
+            description: error.message,
+            variant: "destructive"
+          });
+          return [];
+        }
+        
+        return data as Vehicle[];
+      } catch (error: any) {
         toast({
           title: "Error fetching vehicles",
-          description: error.message,
+          description: error.message || "An unexpected error occurred",
           variant: "destructive"
         });
         return [];
       }
-      
-      return data as Vehicle[];
     }
   });
 
-  const handleAddVehicle = async (values: VehicleFormValues) => {
-    try {
-      const { error } = await supabase
-        .from("vehicles")
-        .insert([values]);
-      
-      if (error) throw error;
-      
+  // Create a mutation for adding vehicles
+  const addVehicleMutation = useMutation({
+    mutationFn: async (values: VehicleFormValues) => {
+      try {
+        // Make sure all required fields are provided
+        const vehicleData = {
+          name: values.name,
+          model: values.model,
+          year: values.year,
+          price_per_day: values.price_per_day,
+          seats: values.seats,
+          transmission: values.transmission,
+          fuel_type: values.fuel_type
+        };
+
+        const { error } = await supabase
+          .from("vehicles")
+          .insert([vehicleData]);
+        
+        if (error) throw error;
+        
+        return vehicleData;
+      } catch (error: any) {
+        throw new Error(error.message || "Failed to add vehicle");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       toast({
         title: "Vehicle added",
         description: "The vehicle has been successfully added."
       });
-      
       setIsAddingVehicle(false);
       form.reset();
-      refetch();
-    } catch (error: any) {
+    },
+    onError: (error: Error) => {
       toast({
         title: "Error adding vehicle",
         description: error.message,
         variant: "destructive"
       });
     }
+  });
+
+  const handleAddVehicle = (values: VehicleFormValues) => {
+    addVehicleMutation.mutate(values);
   };
 
   // Filter vehicles based on search query

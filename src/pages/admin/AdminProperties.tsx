@@ -63,7 +63,7 @@ const AdminProperties = () => {
         
         return propertyData;
       } catch (error: any) {
-        throw new Error(error.message);
+        throw new Error(error.message || "Failed to add property");
       }
     },
     onSuccess: () => {

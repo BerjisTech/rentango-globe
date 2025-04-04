@@ -1,8 +1,9 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BarChart3, LineChart, PieChart, Calendar, Download, Filter, Info 
+  BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Calendar, Download, Filter, Info 
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,9 +13,9 @@ import {
   CartesianGrid,
   Legend,
   Line,
-  LineChart as RechartsLineChart,
+  LineChart,
   Pie,
-  PieChart as RechartsPieChart,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -27,27 +28,38 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Booking } from "@/types/admin";
 
+type TimeRange = "week" | "month" | "year";
+
 const AdminReports = () => {
-  const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
   
   // Fetch bookings from Supabase
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["reports-bookings", timeRange],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*");
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from("bookings")
+          .select("*");
+        
+        if (error) {
+          toast({
+            title: "Error fetching booking data",
+            description: error.message,
+            variant: "destructive"
+          });
+          return [];
+        }
+        
+        return data as Booking[];
+      } catch (error: any) {
         toast({
           title: "Error fetching booking data",
-          description: error.message,
+          description: error.message || "An unexpected error occurred",
           variant: "destructive"
         });
         return [];
       }
-      
-      return data as Booking[];
     }
   });
 
@@ -82,6 +94,14 @@ const AdminReports = () => {
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+  // Function to handle time range change with type safety
+  const handleTimeRangeChange = (value: string) => {
+    // Ensure the value is a valid TimeRange
+    if (value === "week" || value === "month" || value === "year") {
+      setTimeRange(value);
+    }
+  };
+
   // Function to download reports - in a real app, this would generate actual reports
   const handleDownloadReport = () => {
     toast({
@@ -97,7 +117,7 @@ const AdminReports = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Reports & Analytics</h1>
           <div className="flex space-x-2">
-            <Select onValueChange={setTimeRange}>
+            <Select onValueChange={handleTimeRangeChange} value={timeRange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select time range" />
               </SelectTrigger>
@@ -125,7 +145,7 @@ const AdminReports = () => {
               Bookings
             </TabsTrigger>
             <TabsTrigger value="users">
-              <LineChart className="mr-2 h-4 w-4" />
+              <LineChartIcon className="mr-2 h-4 w-4" />
               User Growth
             </TabsTrigger>
           </TabsList>

@@ -1,4 +1,3 @@
-
 // Common types for admin dashboard
 export interface Property {
   id: string;
@@ -37,20 +36,36 @@ export interface Booking {
   created_at: string;
 }
 
+export interface PlatformSettings {
+  id: string;
+  site_name: string;
+  site_description: string | null;
+  contact_email: string | null;
+  support_phone: string | null;
+  booking_fee_percentage: number | null;
+  enable_instant_booking: boolean | null;
+  maintenance_mode: boolean | null;
+  version: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// We'll keep this interface for the form fields that may not
+// directly match our database structure
 export interface Settings {
   id: string;
   site_name: string;
   site_description: string | null;
   contact_email: string | null;
   support_phone: string | null;
-  allow_signups?: boolean;
-  require_email_verification?: boolean;
-  failed_login_attempts?: number;
-  password_expiry_days?: number;
-  booking_fee_percentage?: number | null;
-  enable_instant_booking?: boolean | null;
-  maintenance_mode?: boolean | null;
-  version?: string | null;
+  allow_signups: boolean;
+  require_email_verification: boolean;
+  failed_login_attempts: number;
+  password_expiry_days: number;
+  booking_fee_percentage: number | null;
+  enable_instant_booking: boolean | null;
+  maintenance_mode: boolean | null;
+  version: string | null;
   created_at: string;
   updated_at: string;
 }
