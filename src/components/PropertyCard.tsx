@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, ArrowRight, Home, Square } from "lucide-react";
+import { MapPin, Bed, Bath, ArrowRight, Home, Square, Wifi, Water, Car, Pool } from "lucide-react";
 import { Heart } from "lucide-react";
 
 export type PropertyType = "short-term" | "long-term" | "for-sale";
@@ -20,7 +20,7 @@ export interface PropertyProps {
   title: string;
   location: string;
   price: number;
-  priceUnit: string; // "night" | "month" | "total"
+  priceUnit: string; // "hour" | "night" | "month" | "year" | "total"
   type: PropertyType;
   imageUrl: string;
   beds?: number;
@@ -30,6 +30,10 @@ export interface PropertyProps {
   featured?: boolean;
   rating?: number;
   reviews?: number;
+  hasInternet?: boolean;
+  hasPool?: boolean;
+  hasWater?: boolean;
+  parkingSpaces?: number;
 }
 
 const PropertyCard = ({ 
@@ -46,11 +50,22 @@ const PropertyCard = ({
   hasTransport,
   featured,
   rating,
-  reviews 
+  reviews,
+  hasInternet,
+  hasPool,
+  hasWater,
+  parkingSpaces
 }: PropertyProps) => {
-  const priceLabel = 
-    type === "short-term" ? `/night` :
-    type === "long-term" ? `/month` : "";
+  const formatPriceLabel = () => {
+    switch(priceUnit) {
+      case "hour": return "/hour";
+      case "night": return "/night";
+      case "month": return "/month";
+      case "year": return "/year";
+      case "total": return "";
+      default: return `/${priceUnit}`;
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-100 shadow-sm rounded-xl relative h-full">
@@ -72,7 +87,7 @@ const PropertyCard = ({
       
       <CardContent className="px-3 pt-3 pb-2">
         <div className="mb-1">
-          <div className="text-lg font-semibold text-primary">${price.toLocaleString()}{priceLabel}</div>
+          <div className="text-lg font-semibold text-primary">${price.toLocaleString()}{formatPriceLabel()}</div>
         </div>
         
         <div className="text-sm font-medium mb-1">{title}</div>
@@ -81,7 +96,7 @@ const PropertyCard = ({
           <span>{location}</span>
         </div>
         
-        <div className="flex items-center justify-between text-xs text-gray-600 border-t border-gray-100 pt-2">
+        <div className="flex items-center justify-between text-xs text-gray-600 border-t border-gray-100 pt-2 flex-wrap gap-y-2">
           {beds && (
             <div className="flex items-center">
               <Bed className="h-3.5 w-3.5 mr-1 text-gray-400" />
@@ -98,6 +113,24 @@ const PropertyCard = ({
             <div className="flex items-center">
               <Square className="h-3.5 w-3.5 mr-1 text-gray-400" />
               <span>{area} ft²</span>
+            </div>
+          )}
+          {hasInternet && (
+            <div className="flex items-center">
+              <Wifi className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <span>Wifi</span>
+            </div>
+          )}
+          {hasPool && (
+            <div className="flex items-center">
+              <Pool className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <span>Pool</span>
+            </div>
+          )}
+          {parkingSpaces && parkingSpaces > 0 && (
+            <div className="flex items-center">
+              <Car className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <span>{parkingSpaces} {parkingSpaces === 1 ? 'space' : 'spaces'}</span>
             </div>
           )}
         </div>

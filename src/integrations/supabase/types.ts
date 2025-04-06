@@ -170,33 +170,72 @@ export type Database = {
       }
       properties: {
         Row: {
+          accessibility_features: string[] | null
+          amenities: string[] | null
           bathrooms: number
           bedrooms: number
           created_at: string
+          distance_to_hospital: number | null
+          distance_to_school: number | null
+          ensuite_bathrooms: number | null
+          has_electricity: boolean | null
+          has_internet: boolean | null
+          has_pool: boolean | null
+          has_water: boolean | null
           id: string
+          images: string[] | null
+          kitchen_type: string | null
           location: string
           name: string
+          parking_spaces: number | null
           price: number
+          price_unit: string | null
           type: string
         }
         Insert: {
+          accessibility_features?: string[] | null
+          amenities?: string[] | null
           bathrooms: number
           bedrooms: number
           created_at?: string
+          distance_to_hospital?: number | null
+          distance_to_school?: number | null
+          ensuite_bathrooms?: number | null
+          has_electricity?: boolean | null
+          has_internet?: boolean | null
+          has_pool?: boolean | null
+          has_water?: boolean | null
           id?: string
+          images?: string[] | null
+          kitchen_type?: string | null
           location: string
           name: string
+          parking_spaces?: number | null
           price: number
+          price_unit?: string | null
           type: string
         }
         Update: {
+          accessibility_features?: string[] | null
+          amenities?: string[] | null
           bathrooms?: number
           bedrooms?: number
           created_at?: string
+          distance_to_hospital?: number | null
+          distance_to_school?: number | null
+          ensuite_bathrooms?: number | null
+          has_electricity?: boolean | null
+          has_internet?: boolean | null
+          has_pool?: boolean | null
+          has_water?: boolean | null
           id?: string
+          images?: string[] | null
+          kitchen_type?: string | null
           location?: string
           name?: string
+          parking_spaces?: number | null
           price?: number
+          price_unit?: string | null
           type?: string
         }
         Relationships: []

@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import PropertyCard, { PropertyProps } from "@/components/PropertyCard";
@@ -7,55 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { ArrowRight, Building, Home, Badge, DollarSign, MapPin, Search } from "lucide-react";
-
-// Mock data for featured properties
-const featuredProperties: PropertyProps[] = [
-  {
-    id: "prop1",
-    title: "Luxury Beach Villa",
-    location: "Atlanta, GA",
-    price: 350000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 4,
-    baths: 2.5,
-    area: 252,
-    hasTransport: false,
-    rating: 4.9,
-    reviews: 128
-  },
-  {
-    id: "prop2",
-    title: "Modern Apartment",
-    location: "Boston, MA",
-    price: 420000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 2,
-    baths: 1,
-    area: 100,
-    hasTransport: false,
-    rating: 4.7,
-    reviews: 84
-  },
-  {
-    id: "prop3",
-    title: "Family Home",
-    location: "Sandy Springs, GA",
-    price: 510000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1628611225249-6c93c971261a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 3,
-    baths: 2,
-    area: 180,
-    hasTransport: false,
-    rating: 4.8,
-    reviews: 56
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Property } from "@/types/admin";
+import { useQuery } from "@tanstack/react-query";
 
 // Stats data
 const statsData = [
@@ -88,6 +44,65 @@ const services = [
 ];
 
 const Index = () => {
+  const [featuredProperties, setFeaturedProperties] = useState<PropertyProps[]>([]);
+  
+  // Fetch properties from Supabase
+  const { data: properties, isLoading } = useQuery({
+    queryKey: ["homepage-properties"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(6);
+        
+        if (error) throw error;
+        
+        return data as Property[];
+      } catch (error: any) {
+        toast({
+          title: "Error fetching properties",
+          description: error.message,
+        });
+        return [];
+      }
+    }
+  });
+
+  // Transform fetched properties to match the PropertyCard component format
+  useEffect(() => {
+    if (properties && properties.length > 0) {
+      const transformedProperties: PropertyProps[] = properties.map(property => {
+        // Determine property type and price unit
+        let type: "short-term" | "long-term" | "for-sale";
+        if (property.type === "Sale") type = "for-sale";
+        else if (property.type === "Long Term Rental") type = "long-term";
+        else type = "short-term";
+        
+        return {
+          id: property.id,
+          title: property.name,
+          location: property.location,
+          price: property.price,
+          priceUnit: property.price_unit || "total",
+          type,
+          imageUrl: property.images && property.images.length > 0 
+            ? property.images[0] 
+            : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+          beds: property.bedrooms,
+          baths: property.bathrooms,
+          hasInternet: property.has_internet,
+          hasPool: property.has_pool,
+          hasWater: property.has_water,
+          parkingSpaces: property.parking_spaces,
+        };
+      });
+      
+      setFeaturedProperties(transformedProperties);
+    }
+  }, [properties]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -100,11 +115,22 @@ const Index = () => {
             The #1 Site Real Estate<br />Professionals Trust*
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredProperties.map(property => (
-              <PropertyCard key={property.id} {...property} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : featuredProperties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredProperties.slice(0, 3).map(property => (
+                <PropertyCard key={property.id} {...property} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No properties available yet</p>
+            </div>
+          )}
           
           <div className="flex justify-center mt-8">
             <Link to="/properties?type=for-sale">

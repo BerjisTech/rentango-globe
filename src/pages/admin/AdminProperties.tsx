@@ -6,7 +6,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon } from "lucide-react";
+import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon, Wifi, WifiOff, Droplet, DropletOff, Zap, ZapOff, Car, Pool } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/types/admin";
@@ -17,6 +17,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 const AdminProperties = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,10 +58,21 @@ const AdminProperties = () => {
           location: property.location,
           price: parseFloat(property.price),
           price_unit: property.price_unit,
-          bedrooms: property.units?.length || 0,
-          bathrooms: Math.ceil(property.units?.length / 2) || 1, // Just a simple calculation for now
+          bedrooms: property.bedrooms || property.units?.length || 0,
+          bathrooms: property.bathrooms || Math.ceil(property.units?.length / 2) || 1,
           type: property.type === 'for-sale' ? 'Sale' : property.type === 'long-term' ? 'Long Term Rental' : 'Short Term Rental',
-          images: property.images || []
+          images: property.images || [],
+          kitchen_type: property.kitchen_type,
+          ensuite_bathrooms: property.ensuite_bathrooms || 0,
+          accessibility_features: property.accessibility_features || [],
+          has_water: property.has_water,
+          has_electricity: property.has_electricity,
+          has_internet: property.has_internet,
+          has_pool: property.has_pool,
+          parking_spaces: property.parking_spaces || 0,
+          distance_to_school: property.distance_to_school,
+          distance_to_hospital: property.distance_to_hospital,
+          amenities: property.amenities || []
         };
 
         const { error } = await supabase
@@ -91,8 +103,46 @@ const AdminProperties = () => {
     }
   });
 
+  // Delete property mutation
+  const deletePropertyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        const { error } = await supabase
+          .from("properties")
+          .delete()
+          .eq("id", id);
+        
+        if (error) throw error;
+        
+        return id;
+      } catch (error: any) {
+        throw new Error(error.message || "Failed to delete property");
+      }
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      toast({
+        title: "Property deleted",
+        description: "The property has been successfully removed."
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting property",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleAddProperty = (property: any) => {
     addPropertyMutation.mutate(property);
+  };
+
+  const handleDeleteProperty = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
+      deletePropertyMutation.mutate(id);
+    }
   };
 
   // Filter properties based on search query
@@ -158,6 +208,7 @@ const AdminProperties = () => {
                     <TableHead>Type</TableHead>
                     <TableHead>Bedrooms</TableHead>
                     <TableHead>Price</TableHead>
+                    <TableHead>Amenities</TableHead>
                     <TableHead>Images</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -170,6 +221,19 @@ const AdminProperties = () => {
                       <TableCell>{property.type}</TableCell>
                       <TableCell>{property.bedrooms}</TableCell>
                       <TableCell>{formatPriceWithUnit(property.price, property.price_unit)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {property.has_internet && <Badge variant="outline" className="bg-blue-50"><Wifi className="h-3 w-3 mr-1" /> WiFi</Badge>}
+                          {property.has_water && <Badge variant="outline" className="bg-blue-50"><Droplet className="h-3 w-3 mr-1" /> Water</Badge>}
+                          {property.has_electricity && <Badge variant="outline" className="bg-blue-50"><Zap className="h-3 w-3 mr-1" /> Power</Badge>}
+                          {property.has_pool && <Badge variant="outline" className="bg-blue-50"><Pool className="h-3 w-3 mr-1" /> Pool</Badge>}
+                          {property.parking_spaces && property.parking_spaces > 0 && 
+                            <Badge variant="outline" className="bg-blue-50">
+                              <Car className="h-3 w-3 mr-1" /> {property.parking_spaces}
+                            </Badge>
+                          }
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {property.images && property.images.length > 0 ? (
                           <span className="flex items-center">
@@ -190,7 +254,10 @@ const AdminProperties = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>Edit Property</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => handleDeleteProperty(property.id)}
+                            >
                               Delete Property
                             </DropdownMenuItem>
                           </DropdownMenuContent>

@@ -1,4 +1,3 @@
-
 // Common types for admin dashboard
 export interface Property {
   id: string;
@@ -11,6 +10,17 @@ export interface Property {
   type: string;
   created_at: string;
   images?: string[];
+  kitchen_type?: string;
+  ensuite_bathrooms?: number;
+  accessibility_features?: string[];
+  has_water?: boolean;
+  has_electricity?: boolean;
+  has_internet?: boolean;
+  has_pool?: boolean;
+  parking_spaces?: number;
+  distance_to_school?: number;
+  distance_to_hospital?: number;
+  amenities?: string[];
 }
 
 export interface Vehicle {

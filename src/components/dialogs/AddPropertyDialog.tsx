@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { 
   Dialog,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -39,34 +39,85 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { HelpCircle, Image, X, Upload } from "lucide-react";
+import { HelpCircle, Image, X, Upload, Kitchen, Bed, BedDouble, Accessibility, Droplet, Zap, Wifi, Pool, Car, School, Hospital } from "lucide-react";
 import * as z from "zod";
 
 type PropertyType = "short-term" | "long-term" | "for-sale";
 
+// Define the kitchen types
+const kitchenTypes = [
+  { value: "open", label: "Open Plan Kitchen" },
+  { value: "closed", label: "Closed Kitchen" },
+  { value: "semi-open", label: "Semi-Open Kitchen" },
+  { value: "kitchenette", label: "Kitchenette" },
+  { value: "none", label: "No Kitchen" }
+];
+
+// Define the accessibility features
+const accessibilityFeatures = [
+  { id: "wheelchair", label: "Wheelchair Accessible" },
+  { id: "elevator", label: "Elevator Access" },
+  { id: "ground-floor", label: "Ground Floor" },
+  { id: "wide-doorway", label: "Wide Doorways" },
+  { id: "step-free", label: "Step-free Access" },
+  { id: "grab-bars", label: "Grab Bars" },
+  { id: "accessible-parking", label: "Accessible Parking" }
+];
+
+// Define common amenities
+const commonAmenities = [
+  { id: "air-conditioning", label: "Air Conditioning" },
+  { id: "heating", label: "Heating" },
+  { id: "washer", label: "Washer" },
+  { id: "dryer", label: "Dryer" },
+  { id: "tv", label: "TV" },
+  { id: "workspace", label: "Dedicated Workspace" },
+  { id: "kitchen", label: "Kitchen" },
+  { id: "dishwasher", label: "Dishwasher" },
+  { id: "refrigerator", label: "Refrigerator" },
+  { id: "microwave", label: "Microwave" },
+  { id: "coffee-maker", label: "Coffee Maker" },
+  { id: "hot-tub", label: "Hot Tub" },
+  { id: "balcony", label: "Balcony" },
+  { id: "patio", label: "Patio" },
+  { id: "grill", label: "BBQ Grill" },
+  { id: "gym", label: "Gym" },
+  { id: "security-system", label: "Security System" },
+  { id: "fire-extinguisher", label: "Fire Extinguisher" }
+];
+
 // Define the form validation schema
 const propertyFormSchema = z.object({
-  title: z.string().min(3, {
-    message: "Title must be at least 3 characters.",
-  }),
+  title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   type: z.enum(["short-term", "long-term", "for-sale"]),
-  location: z.string().min(3, {
-    message: "Location must be at least 3 characters.",
-  }),
-  price: z.string().min(1, {
-    message: "Price is required.",
-  }),
+  location: z.string().min(3, { message: "Location must be at least 3 characters." }),
+  price: z.string().min(1, { message: "Price is required." }),
   price_unit: z.string().default("night"),
   description: z.string().optional(),
+  bedrooms: z.number().int().min(0).default(1),
+  bathrooms: z.number().int().min(0).default(1),
+  ensuite_bathrooms: z.number().int().min(0).default(0),
+  kitchen_type: z.string().optional(),
+  has_water: z.boolean().default(true),
+  has_electricity: z.boolean().default(true),
+  has_internet: z.boolean().default(false),
+  has_pool: z.boolean().default(false),
+  parking_spaces: z.number().int().min(0).default(0),
+  accessibility_features: z.array(z.string()).default([]),
+  amenities: z.array(z.string()).default([]),
+  distance_to_school: z.number().min(0).nullable().default(null),
+  distance_to_hospital: z.number().min(0).nullable().default(null),
   structureType: z.enum(["single", "multiple"]).optional(),
   blockFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
   doorFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
   blocksPerSet: z.string().optional(),
   unitsPerBlock: z.string().optional(),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).default([]),
 });
 
 interface AddPropertyDialogProps {
@@ -97,6 +148,19 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       price: "",
       price_unit: "night",
       description: "",
+      bedrooms: 1,
+      bathrooms: 1,
+      ensuite_bathrooms: 0,
+      kitchen_type: "open",
+      has_water: true,
+      has_electricity: true,
+      has_internet: false,
+      has_pool: false,
+      parking_spaces: 0,
+      accessibility_features: [],
+      amenities: [],
+      distance_to_school: null,
+      distance_to_hospital: null,
       structureType: "single",
       blockFormat: "alphabet",
       doorFormat: "numeric",
@@ -146,8 +210,8 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
 
   const onSubmit = (data: z.infer<typeof propertyFormSchema>) => {
     try {
-      // Create units based on the format and number of units
-      const generatedUnits = generateUnits(data);
+      // Create units based on the format and number of units if applicable
+      const generatedUnits = data.structureType ? generateUnits(data) : [];
       
       onAddProperty({
         ...data,
@@ -156,6 +220,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
         units: generatedUnits,
         images: imageUrls,
       });
+
       form.reset();
       setActiveTab("basic");
       setImageFiles([]);
@@ -263,7 +328,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Property</DialogTitle>
         </DialogHeader>
@@ -271,10 +336,11 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Basic Information</TabsTrigger>
-                <TabsTrigger value="arrangement">Property Arrangement</TabsTrigger>
-                <TabsTrigger value="images">Property Images</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="features">Features</TabsTrigger>
+                <TabsTrigger value="arrangement">Units</TabsTrigger>
+                <TabsTrigger value="images">Images</TabsTrigger>
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4 mt-4">
@@ -302,6 +368,11 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                         onValueChange={(value: PropertyType) => {
                           field.onChange(value);
                           setPropertyType(value);
+                          
+                          // Set default price unit based on property type
+                          if (value === "short-term") form.setValue("price_unit", "night");
+                          else if (value === "long-term") form.setValue("price_unit", "month");
+                          else form.setValue("price_unit", "total");
                         }}
                         defaultValue={field.value}
                       >
@@ -388,6 +459,49 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                     )}
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="bedrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bedrooms</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bathrooms</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
@@ -396,7 +510,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                     <FormItem>
                       <FormLabel>Description (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Brief description of the property" {...field} />
+                        <Textarea placeholder="Brief description of the property" className="min-h-[100px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -406,266 +520,314 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                 <div className="flex justify-end">
                   <Button 
                     type="button" 
-                    onClick={() => setActiveTab("arrangement")}
+                    onClick={() => setActiveTab("features")}
                     className="mt-2"
                   >
                     Next
                   </Button>
                 </div>
               </TabsContent>
-              
-              <TabsContent value="arrangement" className="space-y-4 mt-4">
-                {(propertyType === "long-term" || propertyType === "short-term") && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="structureType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Structure Type</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              setStructureType(value);
-                            }}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select structure type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="single">Single Building/Unit</SelectItem>
-                              <SelectItem value="multiple">Multiple Buildings/Blocks</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Choose if your property is a single unit or has multiple blocks
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {structureType === "multiple" && (
-                      <>
+
+              <TabsContent value="features" className="space-y-4 mt-4">
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="kitchen_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center">
+                          <Kitchen className="h-4 w-4 mr-2" />
+                          Kitchen Type
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select kitchen type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {kitchenTypes.map(type => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ensuite_bathrooms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center">
+                          <BedDouble className="h-4 w-4 mr-2" />
+                          En-suite Bathrooms
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="0"
+                            max={form.watch("bedrooms")}
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || 0}
+                          />
+                        </FormControl>
+                        <FormDescription>Number of bedrooms with en-suite bathrooms</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-3">
+                    <h3 className="text-md font-medium flex items-center">
+                      <Accessibility className="h-4 w-4 mr-2" />
+                      Accessibility Features
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {accessibilityFeatures.map((feature) => (
                         <FormField
+                          key={feature.id}
                           control={form.control}
-                          name="blockFormat"
+                          name="accessibility_features"
                           render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center space-x-2">
-                                <FormLabel>Block Naming Format</FormLabel>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
-                                        <HelpCircle className="h-4 w-4" />
-                                        <span className="sr-only">Block format info</span>
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right" className="max-w-xs">
-                                      <p>{formatHelpText[field.value as keyof typeof formatHelpText]}</p>
-                                      <p className="mt-2 text-xs">Examples:</p>
-                                      <ul className="list-disc pl-4 text-xs">
-                                        <li>Alphabet: Block A, Block B, Block C</li>
-                                        <li>Numeric: Block 1, Block 2, Block 3</li>
-                                        <li>Alphanumeric: Block A1, Block A2, Block B1</li>
-                                      </ul>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                              <Select 
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  setBlockFormat(value);
-                                }}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select block format" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="alphabet">Alphabetic (A, B, C...)</SelectItem>
-                                  <SelectItem value="numeric">Numeric (1, 2, 3...)</SelectItem>
-                                  <SelectItem value="alphanumeric">Alphanumeric (A1, B2...)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                How are your blocks or buildings named?
-                              </FormDescription>
-                              <FormMessage />
+                            <FormItem key={feature.id} className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(feature.id)}
+                                  onCheckedChange={(checked) => {
+                                    const updatedFeatures = checked
+                                      ? [...field.value || [], feature.id]
+                                      : field.value?.filter(value => value !== feature.id) || [];
+                                    field.onChange(updatedFeatures);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal cursor-pointer">
+                                {feature.label}
+                              </FormLabel>
                             </FormItem>
                           )}
                         />
-
-                        {blockFormat === "alphanumeric" ? (
-                          <FormField
-                            control={form.control}
-                            name="blocksPerSet"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Number of Blocks per Set (e.g., A1-A4 is 4 blocks in set A)</FormLabel>
-                                <FormControl>
-                                  <Input type="number" min="1" {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                  How many blocks are in each alphabetic set? (e.g., A1-A4 is 4 blocks)
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ) : (
-                          <FormField
-                            control={form.control}
-                            name="blocksPerSet"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Total Number of Blocks</FormLabel>
-                                <FormControl>
-                                  <Input type="number" min="1" {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                  Total number of blocks in your property
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-                      </>
-                    )}
-                    
-                    <FormField
-                      control={form.control}
-                      name="doorFormat"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center space-x-2">
-                            <FormLabel>Door/Unit Naming Format</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0">
-                                  <HelpCircle className="h-4 w-4" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent side="right" className="w-80">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium">Door/Unit Naming Formats</h4>
-                                  <p className="text-sm">Choose how individual units or doors are named in your property:</p>
-                                  
-                                  <div className="rounded-md bg-muted p-3">
-                                    <h5 className="font-medium">Alphabetic (A, B, C...)</h5>
-                                    <p className="text-xs text-muted-foreground">Uses letters for doors.</p>
-                                    <p className="text-xs mt-1">Example: Door A, Door B, Door C</p>
-                                  </div>
-                                  
-                                  <div className="rounded-md bg-muted p-3">
-                                    <h5 className="font-medium">Numeric (1, 2, 3...)</h5>
-                                    <p className="text-xs text-muted-foreground">Uses numbers for doors.</p>
-                                    <p className="text-xs mt-1">Example: Door 1, Door 2, Door 3</p>
-                                  </div>
-                                  
-                                  <div className="rounded-md bg-muted p-3">
-                                    <h5 className="font-medium">Alphanumeric (A1, B2...)</h5>
-                                    <p className="text-xs text-muted-foreground">Uses a combination of letters and numbers.</p>
-                                    <p className="text-xs mt-1">Example: Door A1, Door B2, Door C3</p>
-                                  </div>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          <Select 
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select door format" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="alphabet">Alphabetic (A, B, C...)</SelectItem>
-                              <SelectItem value="numeric">Numeric (1, 2, 3...)</SelectItem>
-                              <SelectItem value="alphanumeric">Alphanumeric (A1, B2...)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            How are individual doors or units named?
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="unitsPerBlock"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {structureType === "single" 
-                              ? "Total Number of Units/Doors" 
-                              : "Number of Units/Doors per Block"}
-                          </FormLabel>
-                          <FormControl>
-                            <Input type="number" min="1" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            {structureType === "single"
-                              ? "How many total units or doors are in your property?"
-                              : "How many units or doors are in each block?"}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="mt-4 p-4 bg-gray-100 rounded-md">
-                      <h3 className="font-medium mb-2">Example Format Preview:</h3>
-                      {structureType === "single" ? (
-                        <p>
-                          Units will be named as: {form.watch("doorFormat") === "alphabet" ? "Door A, Door B, Door C..." : 
-                                                   form.watch("doorFormat") === "numeric" ? "Door 1, Door 2, Door 3..." : 
-                                                   "Door A1, Door B2, Door C3..."}
-                        </p>
-                      ) : (
-                        <p>
-                          Units will be named as: {form.watch("blockFormat") === "alphabet" ? 
-                                                  (form.watch("doorFormat") === "alphabet" ? "Block A - Door A, Block B - Door B..." : 
-                                                   form.watch("doorFormat") === "numeric" ? "Block A - Door 1, Block B - Door 2..." : 
-                                                   "Block A - Door A1, Block B - Door B2...") :
-                                                   form.watch("blockFormat") === "numeric" ?
-                                                  (form.watch("doorFormat") === "alphabet" ? "Block 1 - Door A, Block 2 - Door B..." : 
-                                                   form.watch("doorFormat") === "numeric" ? "Block 1 - Door 1, Block 2 - Door 2..." : 
-                                                   "Block 1 - Door A1, Block 2 - Door B2...") :
-                                                  (form.watch("doorFormat") === "alphabet" ? "Block A1 - Door A, Block B2 - Door B..." : 
-                                                   form.watch("doorFormat") === "numeric" ? "Block A1 - Door 1, Block B2 - Door 2..." : 
-                                                   "Block A1 - Door A1, Block B2 - Door B2...")}
-                        </p>
-                      )}
-
-                      {(form.watch("blocksPerSet") && form.watch("unitsPerBlock")) && (
-                        <p className="mt-2 text-sm">
-                          This will generate a total of {
-                            structureType === "single" 
-                              ? parseInt(form.watch("unitsPerBlock") || "0") 
-                              : blockFormat === "alphanumeric"
-                                ? 26 * parseInt(form.watch("blocksPerSet") || "0") * parseInt(form.watch("unitsPerBlock") || "0")
-                                : parseInt(form.watch("blocksPerSet") || "0") * parseInt(form.watch("unitsPerBlock") || "0")
-                          } units.
-                        </p>
-                      )}
+                      ))}
                     </div>
-                  </>
-                )}
-                
-                <div className="flex justify-between">
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="has_water"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center">
+                              <Droplet className="h-4 w-4 mr-2" />
+                              Water Supply
+                            </FormLabel>
+                            <FormDescription>
+                              Property has running water
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="has_electricity"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center">
+                              <Zap className="h-4 w-4 mr-2" />
+                              Electricity
+                            </FormLabel>
+                            <FormDescription>
+                              Property has electricity
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="has_internet"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center">
+                              <Wifi className="h-4 w-4 mr-2" />
+                              Internet/WiFi
+                            </FormLabel>
+                            <FormDescription>
+                              Property has internet access
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="has_pool"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base flex items-center">
+                              <Pool className="h-4 w-4 mr-2" />
+                              Swimming Pool
+                            </FormLabel>
+                            <FormDescription>
+                              Property has a pool
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="parking_spaces"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center">
+                          <Car className="h-4 w-4 mr-2" />
+                          Parking Spaces
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            value={field.value || 0}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {propertyType === "long-term" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="distance_to_school"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center">
+                              <School className="h-4 w-4 mr-2" />
+                              Distance to School (km)
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="distance_to_hospital"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center">
+                              <Hospital className="h-4 w-4 mr-2" />
+                              Distance to Hospital (km)
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                value={field.value ?? ""}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <h3 className="text-md font-medium">Other Amenities</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {commonAmenities.map((amenity) => (
+                        <FormField
+                          key={amenity.id}
+                          control={form.control}
+                          name="amenities"
+                          render={({ field }) => (
+                            <FormItem key={amenity.id} className="flex flex-row items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(amenity.id)}
+                                  onCheckedChange={(checked) => {
+                                    const updatedAmenities = checked
+                                      ? [...field.value || [], amenity.id]
+                                      : field.value?.filter(value => value !== amenity.id) || [];
+                                    field.onChange(updatedAmenities);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm font-normal cursor-pointer">
+                                {amenity.label}
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4">
                   <Button 
                     type="button" 
                     variant="outline" 
@@ -675,11 +837,33 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                   </Button>
                   <Button 
                     type="button"
-                    onClick={() => setActiveTab("images")}
+                    onClick={() => setActiveTab("arrangement")}
                   >
                     Next
                   </Button>
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="arrangement" className="space-y-4 mt-4">
+                {(propertyType === "long-term" || propertyType === "short-term") && (
+                  <div>
+                    <div className="flex justify-between pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setActiveTab("features")}
+                      >
+                        Back
+                      </Button>
+                      <Button 
+                        type="button"
+                        onClick={() => setActiveTab("images")}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               
               <TabsContent value="images" className="space-y-4 mt-4">

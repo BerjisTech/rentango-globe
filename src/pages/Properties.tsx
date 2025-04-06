@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,102 +13,10 @@ import {
   ToggleGroup, 
   ToggleGroupItem 
 } from "@/components/ui/toggle-group";
-
-// Mock property data
-const allProperties: PropertyProps[] = [
-  {
-    id: "prop1",
-    title: "Luxury Beach Villa with Ocean View",
-    location: "2922 Barnes Ave, New York",
-    price: 505000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 4,
-    baths: 3,
-    area: 1520,
-    hasTransport: true,
-    rating: 4.9,
-    reviews: 128
-  },
-  {
-    id: "prop2",
-    title: "Modern Apartment in City Center",
-    location: "636 E 92nd St, New York",
-    price: 489000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 2,
-    baths: 2,
-    area: 1100,
-    hasTransport: false,
-    featured: true,
-    rating: 4.7,
-    reviews: 84
-  },
-  {
-    id: "prop3",
-    title: "Spacious Family Home with Garden",
-    location: "4308 Avenue M, New York",
-    price: 619900,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 5,
-    baths: 4,
-    area: 1624,
-    hasTransport: false,
-    rating: 4.8,
-    reviews: 56
-  },
-  {
-    id: "prop4",
-    title: "Charming Cottage with Pool",
-    location: "565 Broome St, New York",
-    price: 360000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 3,
-    baths: 2,
-    area: 1320,
-    hasTransport: true,
-    featured: true,
-    rating: 4.6,
-    reviews: 92
-  },
-  {
-    id: "prop5",
-    title: "Penthouse Apartment with City Views",
-    location: "Park Ave, New York",
-    price: 760000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 3,
-    baths: 3,
-    area: 1450,
-    hasTransport: false,
-    rating: 4.5,
-    reviews: 42
-  },
-  {
-    id: "prop6",
-    title: "Cozy Studio in Town",
-    location: "Central Park West, New York",
-    price: 158000,
-    priceUnit: "total",
-    type: "for-sale",
-    imageUrl: "https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
-    beds: 1,
-    baths: 1,
-    area: 650,
-    hasTransport: true,
-    rating: 4.4,
-    reviews: 76
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Property } from "@/types/admin";
 
 const Properties = () => {
   const location = useLocation();
@@ -125,42 +33,107 @@ const Properties = () => {
   const [filters, setFilters] = useState({
     location: locationParam,
     priceRange: [0, propertyType === "for-sale" ? 1000000 : 10000],
-    bedrooms: undefined,
+    bedrooms: undefined as number | undefined,
     hasTransport: false,
+    hasInternet: false,
+    hasPool: false,
   });
 
-  // Update properties based on type and filters
+  // Fetch properties from Supabase
+  const { data: dbProperties, isLoading } = useQuery({
+    queryKey: ["properties", propertyType],
+    queryFn: async () => {
+      try {
+        // Map property type to database value
+        const dbPropertyType = 
+          propertyType === "for-sale" ? "Sale" : 
+          propertyType === "long-term" ? "Long Term Rental" : 
+          "Short Term Rental";
+        
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .eq("type", dbPropertyType)
+          .order("created_at", { ascending: false });
+        
+        if (error) throw error;
+        
+        return data as Property[];
+      } catch (error: any) {
+        toast({
+          title: "Error fetching properties",
+          description: error.message,
+        });
+        return [];
+      }
+    }
+  });
+
+  // Transform fetched properties to match the PropertyCard component format
   useEffect(() => {
-    let filtered = allProperties.filter(property => property.type === propertyType);
-    
-    // Apply location filter if provided
-    if (filters.location) {
+    if (dbProperties && dbProperties.length > 0) {
+      const transformedProperties: PropertyProps[] = dbProperties
+        .map(property => {
+          // Type conversion
+          let type: PropertyType = "short-term";
+          if (property.type === "Sale") type = "for-sale";
+          else if (property.type === "Long Term Rental") type = "long-term";
+          else type = "short-term";
+          
+          return {
+            id: property.id,
+            title: property.name,
+            location: property.location,
+            price: property.price,
+            priceUnit: property.price_unit || "total",
+            type,
+            imageUrl: property.images && property.images.length > 0
+              ? property.images[0]
+              : "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80",
+            beds: property.bedrooms,
+            baths: property.bathrooms,
+            hasInternet: property.has_internet,
+            hasPool: property.has_pool,
+            hasWater: property.has_water,
+            parkingSpaces: property.parking_spaces,
+          };
+        });
+      
+      let filtered = transformedProperties;
+      
+      // Apply filters
+      if (filters.location) {
+        filtered = filtered.filter(property => 
+          property.location.toLowerCase().includes(filters.location.toLowerCase())
+        );
+      }
+      
+      // Apply price filter
       filtered = filtered.filter(property => 
-        property.location.toLowerCase().includes(filters.location.toLowerCase())
+        property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]
       );
+      
+      // Apply bedroom filter if provided
+      if (filters.bedrooms) {
+        filtered = filtered.filter(property => 
+          property.beds ? property.beds >= filters.bedrooms! : false
+        );
+      }
+      
+      // Apply amenity filters
+      if (filters.hasInternet) {
+        filtered = filtered.filter(property => property.hasInternet);
+      }
+      
+      if (filters.hasPool) {
+        filtered = filtered.filter(property => property.hasPool);
+      }
+      
+      setProperties(filtered);
+    } else {
+      setProperties([]);
     }
-    
-    // Apply price filter
-    filtered = filtered.filter(property => 
-      property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]
-    );
-    
-    // Apply bedroom filter if provided
-    if (filters.bedrooms) {
-      filtered = filtered.filter(property => 
-        property.beds ? property.beds >= filters.bedrooms! : false
-      );
-    }
-    
-    // Apply transport filter if selected
-    if (filters.hasTransport) {
-      filtered = filtered.filter(property => property.hasTransport);
-    }
-    
-    setProperties(filtered);
-    // Reset selected property when filters change
-    setSelectedProperty(null);
-  }, [propertyType, filters]);
+  }, [dbProperties, filters]);
 
   const handleSearch = () => {
     setFilters({
@@ -258,7 +231,11 @@ const Properties = () => {
               
               {/* Property Cards */}
               <div className="flex-1 overflow-y-auto bg-white border-x border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {properties.length > 0 ? (
+                {isLoading ? (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : properties.length > 0 ? (
                   properties.map(property => (
                     <div 
                       key={property.id}
