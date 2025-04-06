@@ -60,10 +60,7 @@ const Index = () => {
         
         return data as Property[];
       } catch (error: any) {
-        toast({
-          title: "Error fetching properties",
-          description: error.message,
-        });
+        toast.error(`Error fetching properties: ${error.message}`);
         return [];
       }
     }

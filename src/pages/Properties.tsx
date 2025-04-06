@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -39,12 +38,10 @@ const Properties = () => {
     hasPool: false,
   });
 
-  // Fetch properties from Supabase
   const { data: dbProperties, isLoading } = useQuery({
     queryKey: ["properties", propertyType],
     queryFn: async () => {
       try {
-        // Map property type to database value
         const dbPropertyType = 
           propertyType === "for-sale" ? "Sale" : 
           propertyType === "long-term" ? "Long Term Rental" : 
@@ -60,21 +57,16 @@ const Properties = () => {
         
         return data as Property[];
       } catch (error: any) {
-        toast({
-          title: "Error fetching properties",
-          description: error.message,
-        });
+        toast.error(`Error fetching properties: ${error.message}`);
         return [];
       }
     }
   });
 
-  // Transform fetched properties to match the PropertyCard component format
   useEffect(() => {
     if (dbProperties && dbProperties.length > 0) {
       const transformedProperties: PropertyProps[] = dbProperties
         .map(property => {
-          // Type conversion
           let type: PropertyType = "short-term";
           if (property.type === "Sale") type = "for-sale";
           else if (property.type === "Long Term Rental") type = "long-term";
@@ -101,26 +93,22 @@ const Properties = () => {
       
       let filtered = transformedProperties;
       
-      // Apply filters
       if (filters.location) {
         filtered = filtered.filter(property => 
           property.location.toLowerCase().includes(filters.location.toLowerCase())
         );
       }
       
-      // Apply price filter
       filtered = filtered.filter(property => 
         property.price >= filters.priceRange[0] && property.price <= filters.priceRange[1]
       );
       
-      // Apply bedroom filter if provided
       if (filters.bedrooms) {
         filtered = filtered.filter(property => 
           property.beds ? property.beds >= filters.bedrooms! : false
         );
       }
       
-      // Apply amenity filters
       if (filters.hasInternet) {
         filtered = filtered.filter(property => property.hasInternet);
       }
@@ -159,7 +147,6 @@ const Properties = () => {
       <Navbar />
       
       <div className="flex-1 flex flex-col">
-        {/* Search Header */}
         <div className="bg-white shadow-sm border-b border-gray-100 py-4">
           <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full max-w-md">
@@ -200,9 +187,7 @@ const Properties = () => {
           </div>
         </div>
         
-        {/* Main Content */}
         <div className="flex-1 flex container mx-auto p-4 gap-4">
-          {/* Map View (Left Side) */}
           {(viewMode === "map" || viewMode === "split") && (
             <div className={`${viewMode === "split" ? "w-1/2" : "w-full"} h-[calc(100vh-12rem)] relative rounded-xl overflow-hidden border border-gray-200 bg-gray-100`}>
               <Map 
@@ -213,10 +198,8 @@ const Properties = () => {
             </div>
           )}
           
-          {/* Properties List (Right Side) */}
           {(viewMode === "list" || viewMode === "split") && (
             <div className={`${viewMode === "split" ? "w-1/2" : "w-full"} flex flex-col h-[calc(100vh-12rem)] overflow-hidden`}>
-              {/* Results Header */}
               <div className="bg-white p-4 rounded-t-xl border border-gray-200 flex justify-between items-center">
                 <h2 className="font-semibold text-lg">
                   <span className="font-bold">{properties.length}</span> Results
@@ -229,7 +212,6 @@ const Properties = () => {
                 </div>
               </div>
               
-              {/* Property Cards */}
               <div className="flex-1 overflow-y-auto bg-white border-x border-gray-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {isLoading ? (
                   <div className="col-span-full flex justify-center items-center py-12">
@@ -255,7 +237,6 @@ const Properties = () => {
                 )}
               </div>
               
-              {/* Pagination */}
               <div className="bg-white p-3 rounded-b-xl border border-gray-200 border-t-0 flex justify-center">
                 <Button variant="outline" size="sm" className="rounded-full px-4">
                   Load More
@@ -265,7 +246,6 @@ const Properties = () => {
           )}
         </div>
         
-        {/* Filters Sidebar */}
         {showFilters && (
           <div className="fixed inset-y-0 right-0 w-72 bg-white shadow-xl z-50 transform transition-transform ease-in-out duration-300 overflow-y-auto">
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
