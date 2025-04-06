@@ -44,12 +44,11 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { HelpCircle, Image, X, Upload, Kitchen, Bed, BedDouble, Accessibility, Droplet, Zap, Wifi, Pool, Car, School, Hospital } from "lucide-react";
+import { HelpCircle, Image, X, Upload, Home, Bed, BedDouble, Accessibility, Droplet, Zap, Wifi, ScrollText, Car, School, Hospital } from "lucide-react";
 import * as z from "zod";
 
 type PropertyType = "short-term" | "long-term" | "for-sale";
 
-// Define the kitchen types
 const kitchenTypes = [
   { value: "open", label: "Open Plan Kitchen" },
   { value: "closed", label: "Closed Kitchen" },
@@ -58,7 +57,6 @@ const kitchenTypes = [
   { value: "none", label: "No Kitchen" }
 ];
 
-// Define the accessibility features
 const accessibilityFeatures = [
   { id: "wheelchair", label: "Wheelchair Accessible" },
   { id: "elevator", label: "Elevator Access" },
@@ -69,7 +67,6 @@ const accessibilityFeatures = [
   { id: "accessible-parking", label: "Accessible Parking" }
 ];
 
-// Define common amenities
 const commonAmenities = [
   { id: "air-conditioning", label: "Air Conditioning" },
   { id: "heating", label: "Heating" },
@@ -91,7 +88,6 @@ const commonAmenities = [
   { id: "fire-extinguisher", label: "Fire Extinguisher" }
 ];
 
-// Define the form validation schema
 const propertyFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters." }),
   type: z.enum(["short-term", "long-term", "for-sale"]),
@@ -174,7 +170,6 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       
-      // Limit to 5 images total
       if (imageFiles.length + newFiles.length > 5) {
         toast.error("You can upload a maximum of 5 images per property");
         return;
@@ -182,11 +177,9 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       
       setImageFiles(prev => [...prev, ...newFiles]);
       
-      // Create URLs for preview
       const newUrls = newFiles.map(file => URL.createObjectURL(file));
       setImageUrls(prev => [...prev, ...newUrls]);
       
-      // Update form value
       form.setValue("images", [...(form.getValues("images") || []), ...newUrls]);
     }
   };
@@ -195,7 +188,6 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
     const newFiles = [...imageFiles];
     const newUrls = [...imageUrls];
     
-    // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(newUrls[index]);
     
     newFiles.splice(index, 1);
@@ -204,13 +196,11 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
     setImageFiles(newFiles);
     setImageUrls(newUrls);
     
-    // Update form value
     form.setValue("images", newUrls);
   };
 
   const onSubmit = (data: z.infer<typeof propertyFormSchema>) => {
     try {
-      // Create units based on the format and number of units if applicable
       const generatedUnits = data.structureType ? generateUnits(data) : [];
       
       onAddProperty({
@@ -233,12 +223,10 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
     }
   };
 
-  // Function to generate units based on the selected formats and numbers
   const generateUnits = (data: z.infer<typeof propertyFormSchema>) => {
     const units = [];
     
     if (data.structureType === "single") {
-      // For single buildings, just use door format
       const numUnits = parseInt(data.unitsPerBlock || "0", 10);
       
       for (let i = 1; i <= numUnits; i++) {
@@ -248,14 +236,12 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
         });
       }
     } else if (data.structureType === "multiple") {
-      // For multiple buildings, use block and door format
       const numBlocksPerSet = parseInt(data.blocksPerSet || "0", 10);
       const numUnitsPerBlock = parseInt(data.unitsPerBlock || "0", 10);
       
       if (data.blockFormat === "alphanumeric") {
-        // Handle alphanumeric blocks (e.g., A1, A2, B1, B2)
         for (let letter = 0; letter < 26; letter++) {
-          const blockLetter = String.fromCharCode(65 + letter); // A, B, C, ...
+          const blockLetter = String.fromCharCode(65 + letter);
           
           for (let blockNum = 1; blockNum <= numBlocksPerSet; blockNum++) {
             const blockName = `${blockLetter}${blockNum}`;
@@ -272,7 +258,6 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
           }
         }
       } else {
-        // Handle regular blocks (alphabet or numeric)
         const totalBlocks = numBlocksPerSet;
         
         for (let blockIdx = 1; blockIdx <= totalBlocks; blockIdx++) {
@@ -293,33 +278,28 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
     
     return units;
   };
-  
+
   const formatBlockName = (index: number, format: string): string => {
     if (format === "alphabet") {
-      // A, B, C, ...
       return String.fromCharCode(64 + index);
     } else if (format === "numeric") {
-      // 1, 2, 3, ...
       return String(index);
     }
     return String(index);
   };
-  
+
   const formatDoorName = (index: number, format: string): string => {
     if (format === "alphabet") {
-      // A, B, C, ...
       return String.fromCharCode(64 + index);
     } else if (format === "numeric") {
-      // 1, 2, 3, ...
       return String(index);
     } else if (format === "alphanumeric") {
-      // A1, B2, C3, ...
       const letter = String.fromCharCode(64 + Math.ceil(index / 26));
       return `${letter}${index}`;
     }
     return String(index);
   };
-  
+
   const formatHelpText = {
     alphabet: "Uses letters (A, B, C...) for naming blocks or doors.",
     numeric: "Uses numbers (1, 2, 3...) for naming blocks or doors.",
@@ -369,7 +349,6 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                           field.onChange(value);
                           setPropertyType(value);
                           
-                          // Set default price unit based on property type
                           if (value === "short-term") form.setValue("price_unit", "night");
                           else if (value === "long-term") form.setValue("price_unit", "month");
                           else form.setValue("price_unit", "total");
@@ -536,7 +515,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center">
-                          <Kitchen className="h-4 w-4 mr-2" />
+                          <Home className="h-4 w-4 mr-2" />
                           Kitchen Type
                         </FormLabel>
                         <Select
@@ -702,7 +681,7 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base flex items-center">
-                              <Pool className="h-4 w-4 mr-2" />
+                              <ScrollText className="h-4 w-4 mr-2" />
                               Swimming Pool
                             </FormLabel>
                             <FormDescription>

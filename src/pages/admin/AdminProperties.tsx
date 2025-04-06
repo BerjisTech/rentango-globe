@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon, Wifi, WifiOff, Droplet, DropletOff, Zap, ZapOff, Car, Pool } from "lucide-react";
+import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon, Wifi, WifiOff, Droplet, Zap, ZapOff, Car, ScrollText } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/types/admin";
@@ -24,7 +23,6 @@ const AdminProperties = () => {
   const [isAddingProperty, setIsAddingProperty] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch properties from Supabase
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
@@ -48,11 +46,9 @@ const AdminProperties = () => {
     }
   });
 
-  // Create a mutation for adding properties
   const addPropertyMutation = useMutation({
     mutationFn: async (property: any) => {
       try {
-        // Transform the property data to match our database schema
         const propertyData = {
           name: property.title,
           location: property.location,
@@ -103,7 +99,6 @@ const AdminProperties = () => {
     }
   });
 
-  // Delete property mutation
   const deletePropertyMutation = useMutation({
     mutationFn: async (id: string) => {
       try {
@@ -145,14 +140,12 @@ const AdminProperties = () => {
     }
   };
 
-  // Filter properties based on search query
   const filteredProperties = properties?.filter(property => 
     property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     property.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Format price with unit
   const formatPriceWithUnit = (price: number, unit?: string) => {
     if (!unit) return `$${price.toFixed(2)}`;
     
@@ -226,7 +219,7 @@ const AdminProperties = () => {
                           {property.has_internet && <Badge variant="outline" className="bg-blue-50"><Wifi className="h-3 w-3 mr-1" /> WiFi</Badge>}
                           {property.has_water && <Badge variant="outline" className="bg-blue-50"><Droplet className="h-3 w-3 mr-1" /> Water</Badge>}
                           {property.has_electricity && <Badge variant="outline" className="bg-blue-50"><Zap className="h-3 w-3 mr-1" /> Power</Badge>}
-                          {property.has_pool && <Badge variant="outline" className="bg-blue-50"><Pool className="h-3 w-3 mr-1" /> Pool</Badge>}
+                          {property.has_pool && <Badge variant="outline" className="bg-blue-50"><ScrollText className="h-3 w-3 mr-1" /> Pool</Badge>}
                           {property.parking_spaces && property.parking_spaces > 0 && 
                             <Badge variant="outline" className="bg-blue-50">
                               <Car className="h-3 w-3 mr-1" /> {property.parking_spaces}

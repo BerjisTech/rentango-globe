@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Bed, Bath, ArrowRight, Home, Square, Wifi, Water, Car, Pool } from "lucide-react";
+import { MapPin, Bed, Bath, ArrowRight, Home, Square, Wifi, Droplet, Car, ScrollText } from "lucide-react";
 import { Heart } from "lucide-react";
 
 export type PropertyType = "short-term" | "long-term" | "for-sale";
@@ -123,8 +123,14 @@ const PropertyCard = ({
           )}
           {hasPool && (
             <div className="flex items-center">
-              <Pool className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <ScrollText className="h-3.5 w-3.5 mr-1 text-gray-400" />
               <span>Pool</span>
+            </div>
+          )}
+          {hasWater && (
+            <div className="flex items-center">
+              <Droplet className="h-3.5 w-3.5 mr-1 text-gray-400" />
+              <span>Water</span>
             </div>
           )}
           {parkingSpaces && parkingSpaces > 0 && (
