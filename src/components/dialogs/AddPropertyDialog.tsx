@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -42,7 +42,7 @@ import {
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Image, X, Upload } from "lucide-react";
 import * as z from "zod";
 
 type PropertyType = "short-term" | "long-term" | "for-sale";
@@ -59,12 +59,14 @@ const propertyFormSchema = z.object({
   price: z.string().min(1, {
     message: "Price is required.",
   }),
+  price_unit: z.string().default("night"),
   description: z.string().optional(),
   structureType: z.enum(["single", "multiple"]).optional(),
   blockFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
   doorFormat: z.enum(["alphabet", "numeric", "alphanumeric"]).optional(),
   blocksPerSet: z.string().optional(),
   unitsPerBlock: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 
 interface AddPropertyDialogProps {
@@ -82,6 +84,9 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
   const [propertyType, setPropertyType] = useState<PropertyType>("short-term");
   const [structureType, setStructureType] = useState<string>("single");
   const [blockFormat, setBlockFormat] = useState<string>("alphabet");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<z.infer<typeof propertyFormSchema>>({
     resolver: zodResolver(propertyFormSchema),
@@ -90,14 +95,54 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       type: "short-term",
       location: "",
       price: "",
+      price_unit: "night",
       description: "",
       structureType: "single",
       blockFormat: "alphabet",
       doorFormat: "numeric",
       blocksPerSet: "",
       unitsPerBlock: "",
+      images: [],
     },
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      
+      // Limit to 5 images total
+      if (imageFiles.length + newFiles.length > 5) {
+        toast.error("You can upload a maximum of 5 images per property");
+        return;
+      }
+      
+      setImageFiles(prev => [...prev, ...newFiles]);
+      
+      // Create URLs for preview
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
+      setImageUrls(prev => [...prev, ...newUrls]);
+      
+      // Update form value
+      form.setValue("images", [...(form.getValues("images") || []), ...newUrls]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newFiles = [...imageFiles];
+    const newUrls = [...imageUrls];
+    
+    // Revoke object URL to prevent memory leaks
+    URL.revokeObjectURL(newUrls[index]);
+    
+    newFiles.splice(index, 1);
+    newUrls.splice(index, 1);
+    
+    setImageFiles(newFiles);
+    setImageUrls(newUrls);
+    
+    // Update form value
+    form.setValue("images", newUrls);
+  };
 
   const onSubmit = (data: z.infer<typeof propertyFormSchema>) => {
     try {
@@ -106,11 +151,15 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
       
       onAddProperty({
         ...data,
+        price: parseFloat(data.price),
         status: "Active",
         units: generatedUnits,
+        images: imageUrls,
       });
       form.reset();
       setActiveTab("basic");
+      setImageFiles([]);
+      setImageUrls([]);
       onOpenChange(false);
       toast.success("Property added successfully!");
     } catch (error) {
@@ -222,9 +271,10 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="basic">Basic Information</TabsTrigger>
                 <TabsTrigger value="arrangement">Property Arrangement</TabsTrigger>
+                <TabsTrigger value="images">Property Images</TabsTrigger>
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4 mt-4">
@@ -285,28 +335,59 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder={
-                            propertyType === "short-term" 
-                              ? "e.g. 15,000/night" 
-                              : propertyType === "long-term" 
-                                ? "e.g. 45,000/month" 
-                                : "e.g. 25,000,000"
-                          } 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="e.g. 15000"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="price_unit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price Unit</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select price unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="hour">Per Hour</SelectItem>
+                            <SelectItem value="day">Per Day</SelectItem>
+                            <SelectItem value="night">Per Night</SelectItem>
+                            <SelectItem value="week">Per Week</SelectItem>
+                            <SelectItem value="month">Per Month</SelectItem>
+                            <SelectItem value="year">Per Year</SelectItem>
+                            {propertyType === "for-sale" && (
+                              <SelectItem value="total">Total Price</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
@@ -589,6 +670,66 @@ const AddPropertyDialog: React.FC<AddPropertyDialogProps> = ({
                     type="button" 
                     variant="outline" 
                     onClick={() => setActiveTab("basic")}
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    type="button"
+                    onClick={() => setActiveTab("images")}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="images" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-10 w-10 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500 text-center">
+                      Click to upload images (max 5)
+                      <br />
+                      <span className="text-xs">JPG, PNG, GIF up to 5MB each</span>
+                    </p>
+                    <input 
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                    />
+                  </div>
+                  
+                  {imageUrls.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="relative rounded-lg overflow-hidden h-32 bg-gray-100">
+                          <img 
+                            src={url} 
+                            alt={`Property image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                          >
+                            <X className="h-4 w-4 text-gray-700" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-between mt-6">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setActiveTab("arrangement")}
                   >
                     Back
                   </Button>

@@ -1,13 +1,16 @@
+
 // Common types for admin dashboard
 export interface Property {
   id: string;
   name: string;
   location: string;
   price: number;
+  price_unit: string;
   bedrooms: number;
   bathrooms: number;
   type: string;
   created_at: string;
+  images?: string[];
 }
 
 export interface Vehicle {

@@ -6,11 +6,17 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, Search, Building, Edit, Trash, Loader2 } from "lucide-react";
+import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/types/admin";
 import AddPropertyDialog from "@/components/dialogs/AddPropertyDialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 const AdminProperties = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,9 +56,11 @@ const AdminProperties = () => {
           name: property.title,
           location: property.location,
           price: parseFloat(property.price),
+          price_unit: property.price_unit,
           bedrooms: property.units?.length || 0,
           bathrooms: Math.ceil(property.units?.length / 2) || 1, // Just a simple calculation for now
-          type: property.type === 'for-sale' ? 'Sale' : property.type === 'long-term' ? 'Long Term Rental' : 'Short Term Rental'
+          type: property.type === 'for-sale' ? 'Sale' : property.type === 'long-term' ? 'Long Term Rental' : 'Short Term Rental',
+          images: property.images || []
         };
 
         const { error } = await supabase
@@ -93,6 +101,14 @@ const AdminProperties = () => {
     property.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     property.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Format price with unit
+  const formatPriceWithUnit = (price: number, unit?: string) => {
+    if (!unit) return `$${price.toFixed(2)}`;
+    
+    if (unit === 'total') return `$${price.toFixed(2)}`;
+    return `$${price.toFixed(2)}/${unit}`;
+  };
 
   return (
     <AdminLayout activeTab="properties">
@@ -142,6 +158,7 @@ const AdminProperties = () => {
                     <TableHead>Type</TableHead>
                     <TableHead>Bedrooms</TableHead>
                     <TableHead>Price</TableHead>
+                    <TableHead>Images</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -152,16 +169,32 @@ const AdminProperties = () => {
                       <TableCell>{property.location}</TableCell>
                       <TableCell>{property.type}</TableCell>
                       <TableCell>{property.bedrooms}</TableCell>
-                      <TableCell>${property.price.toFixed(2)}</TableCell>
+                      <TableCell>{formatPriceWithUnit(property.price, property.price_unit)}</TableCell>
+                      <TableCell>
+                        {property.images && property.images.length > 0 ? (
+                          <span className="flex items-center">
+                            <ImageIcon className="h-4 w-4 mr-1" />
+                            {property.images.length}
+                          </span>
+                        ) : (
+                          "No images"
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-destructive">
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Edit Property</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              Delete Property
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
