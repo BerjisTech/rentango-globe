@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -39,6 +40,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { RecentActivities } from "@/components/admin/RecentActivities";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -181,71 +183,7 @@ const AdminDashboard = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date & Time</TableHead>
-                          <TableHead>Activity</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">2023-06-15 10:24 AM</TableCell>
-                          <TableCell>New Property Listed</TableCell>
-                          <TableCell>John Doe</TableCell>
-                          <TableCell>
-                            <span className="tag bg-amber-100 text-amber-700">
-                              Pending Approval
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Review</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">2023-06-15 09:45 AM</TableCell>
-                          <TableCell>Booking Completed</TableCell>
-                          <TableCell>Jane Smith</TableCell>
-                          <TableCell>
-                            <span className="tag bg-green-100 text-green-700">
-                              Completed
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">View</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">2023-06-15 09:15 AM</TableCell>
-                          <TableCell>User Reported Issue</TableCell>
-                          <TableCell>Mark Wilson</TableCell>
-                          <TableCell>
-                            <span className="tag bg-red-100 text-red-700">
-                              Requires Action
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Resolve</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">2023-06-15 08:30 AM</TableCell>
-                          <TableCell>New User Registration</TableCell>
-                          <TableCell>Sarah Johnson</TableCell>
-                          <TableCell>
-                            <span className="tag bg-green-100 text-green-700">
-                              Verified
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">View</Button>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                    <RecentActivities />
                   </CardContent>
                 </Card>
                 
