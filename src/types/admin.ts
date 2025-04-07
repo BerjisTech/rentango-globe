@@ -21,6 +21,7 @@ export interface Property {
   distance_to_school?: number;
   distance_to_hospital?: number;
   amenities?: string[];
+  status?: 'pending_approval' | 'approved' | 'rejected' | 'off_market';
 }
 
 export interface Vehicle {
