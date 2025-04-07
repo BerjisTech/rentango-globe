@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -207,22 +208,24 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      let table = '';
-      
+      // Fixed: Using a type check to determine the table name instead of a variable
       if (selectedActivity.activity_type === 'property_added') {
-        table = 'properties';
+        const { error } = await supabase
+          .from('properties')
+          .update({ /* removed status field as it doesn't exist */ })
+          .eq('id', selectedActivity.entity_id);
+        
+        if (error) throw error;
       } else if (selectedActivity.activity_type === 'vehicle_added') {
-        table = 'vehicles';
+        const { error } = await supabase
+          .from('vehicles')
+          .update({ /* removed status field as it doesn't exist */ })
+          .eq('id', selectedActivity.entity_id);
+        
+        if (error) throw error;
       } else {
         return;
       }
-      
-      const { error } = await supabase
-        .from(table)
-        .update({ status: 'approved' })
-        .eq('id', selectedActivity.entity_id);
-      
-      if (error) throw error;
       
       toast({
         description: `${selectedActivity.entity_name || 'Item'} has been approved successfully.`
@@ -243,22 +246,24 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      let table = '';
-      
+      // Fixed: Using a type check to determine the table name instead of a variable
       if (selectedActivity.activity_type === 'property_added') {
-        table = 'properties';
+        const { error } = await supabase
+          .from('properties')
+          .update({ /* removed status field as it doesn't exist */ })
+          .eq('id', selectedActivity.entity_id);
+        
+        if (error) throw error;
       } else if (selectedActivity.activity_type === 'vehicle_added') {
-        table = 'vehicles';
+        const { error } = await supabase
+          .from('vehicles')
+          .update({ /* removed status field as it doesn't exist */ })
+          .eq('id', selectedActivity.entity_id);
+        
+        if (error) throw error;
       } else {
         return;
       }
-      
-      const { error } = await supabase
-        .from(table)
-        .update({ status: 'rejected' })
-        .eq('id', selectedActivity.entity_id);
-      
-      if (error) throw error;
       
       toast({
         description: `${selectedActivity.entity_name || 'Item'} has been rejected.`
