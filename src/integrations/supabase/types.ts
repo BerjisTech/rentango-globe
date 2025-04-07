@@ -190,6 +190,7 @@ export type Database = {
           parking_spaces: number | null
           price: number
           price_unit: string | null
+          status: string | null
           type: string
         }
         Insert: {
@@ -213,6 +214,7 @@ export type Database = {
           parking_spaces?: number | null
           price: number
           price_unit?: string | null
+          status?: string | null
           type: string
         }
         Update: {
@@ -236,6 +238,7 @@ export type Database = {
           parking_spaces?: number | null
           price?: number
           price_unit?: string | null
+          status?: string | null
           type?: string
         }
         Relationships: []

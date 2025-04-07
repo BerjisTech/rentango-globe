@@ -11,9 +11,4 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Add TypeScript declaration for Property status field
-declare module '@/types/admin' {
-  interface Property {
-    status?: 'pending_approval' | 'approved' | 'rejected' | 'off_market';
-  }
-}
+// Property status field is already defined in the Property interface in admin.ts
