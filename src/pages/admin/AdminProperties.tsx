@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon, Wifi, WifiOff, Droplet, Zap, ZapOff, Car, ScrollText } from "lucide-react";
+import { PlusCircle, Search, Building, Edit, Trash, Loader2, Image as ImageIcon, Wifi, WifiOff, Droplet, Zap, ZapOff, Car, ScrollText, Check, X, EyeOff } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/types/admin";
@@ -17,10 +18,21 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 
 const AdminProperties = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingProperty, setIsAddingProperty] = useState(false);
+  const [propertyToAction, setPropertyToAction] = useState<{id: string, name: string, action: 'delete' | 'approve' | 'reject' | 'pull-off-market'} | null>(null);
   const queryClient = useQueryClient();
 
   const { data: properties, isLoading } = useQuery({
@@ -68,7 +80,8 @@ const AdminProperties = () => {
           parking_spaces: property.parking_spaces || 0,
           distance_to_school: property.distance_to_school,
           distance_to_hospital: property.distance_to_hospital,
-          amenities: property.amenities || []
+          amenities: property.amenities || [],
+          status: 'pending_approval'
         };
 
         const { error } = await supabase
@@ -99,34 +112,69 @@ const AdminProperties = () => {
     }
   });
 
-  const deletePropertyMutation = useMutation({
-    mutationFn: async (id: string) => {
+  const propertyActionMutation = useMutation({
+    mutationFn: async ({ id, action }: { id: string, action: string }) => {
       try {
-        const { error } = await supabase
-          .from("properties")
-          .delete()
-          .eq("id", id);
+        let status = '';
         
-        if (error) throw error;
+        switch (action) {
+          case 'approve':
+            status = 'approved';
+            break;
+          case 'reject':
+            status = 'rejected';
+            break;
+          case 'pull-off-market':
+            status = 'off_market';
+            break;
+          case 'delete':
+            const { error: deleteError } = await supabase
+              .from("properties")
+              .delete()
+              .eq("id", id);
+            
+            if (deleteError) throw deleteError;
+            return { id, action };
+        }
         
-        return id;
+        if (status) {
+          const { error } = await supabase
+            .from("properties")
+            .update({ status })
+            .eq("id", id);
+          
+          if (error) throw error;
+        }
+        
+        return { id, action };
       } catch (error: any) {
-        throw new Error(error.message || "Failed to delete property");
+        throw new Error(error.message || "Failed to perform action on property");
       }
     },
-    onSuccess: (id) => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
+      
+      const actionMessages = {
+        'delete': "Property has been deleted",
+        'approve': "Property has been approved",
+        'reject': "Property has been rejected",
+        'pull-off-market': "Property has been pulled off market"
+      };
+      
       toast({
-        title: "Property deleted",
-        description: "The property has been successfully removed."
+        title: "Success",
+        description: actionMessages[result.action as keyof typeof actionMessages]
       });
+      
+      setPropertyToAction(null);
     },
     onError: (error: Error) => {
       toast({
-        title: "Error deleting property",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
+      setPropertyToAction(null);
     }
   });
 
@@ -134,9 +182,73 @@ const AdminProperties = () => {
     addPropertyMutation.mutate(property);
   };
 
-  const handleDeleteProperty = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
-      deletePropertyMutation.mutate(id);
+  const handlePropertyAction = (property: Property, action: 'delete' | 'approve' | 'reject' | 'pull-off-market') => {
+    setPropertyToAction({ id: property.id, name: property.name, action });
+  };
+
+  const executeAction = () => {
+    if (propertyToAction) {
+      propertyActionMutation.mutate({ 
+        id: propertyToAction.id, 
+        action: propertyToAction.action 
+      });
+    }
+  };
+
+  const getActionTitle = () => {
+    if (!propertyToAction) return "";
+    
+    switch (propertyToAction.action) {
+      case 'delete': return "Delete Property";
+      case 'approve': return "Approve Property";
+      case 'reject': return "Reject Property";
+      case 'pull-off-market': return "Pull Off Market";
+      default: return "";
+    }
+  };
+
+  const getActionDescription = () => {
+    if (!propertyToAction) return "";
+    
+    switch (propertyToAction.action) {
+      case 'delete': 
+        return `Are you sure you want to delete "${propertyToAction.name}"? This action cannot be undone.`;
+      case 'approve': 
+        return `Are you sure you want to approve "${propertyToAction.name}"? This will make it visible on the marketplace.`;
+      case 'reject': 
+        return `Are you sure you want to reject "${propertyToAction.name}"?`;
+      case 'pull-off-market': 
+        return `Are you sure you want to pull "${propertyToAction.name}" off the market? It will no longer be visible to customers.`;
+      default: return "";
+    }
+  };
+
+  const getActionButton = () => {
+    if (!propertyToAction) return "";
+    
+    switch (propertyToAction.action) {
+      case 'delete': return "Delete";
+      case 'approve': return "Approve";
+      case 'reject': return "Reject";
+      case 'pull-off-market': return "Pull Off Market";
+      default: return "Confirm";
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status) return null;
+    
+    switch (status) {
+      case 'pending_approval':
+        return <Badge variant="outline" className="bg-amber-100 text-amber-700">Pending Approval</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="bg-green-100 text-green-700">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-100 text-red-700">Rejected</Badge>;
+      case 'off_market':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-700">Off Market</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -170,6 +282,30 @@ const AdminProperties = () => {
           onAddProperty={handleAddProperty} 
         />
         
+        <AlertDialog open={!!propertyToAction} onOpenChange={(open) => !open && setPropertyToAction(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{getActionTitle()}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {getActionDescription()}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={executeAction}
+                className={
+                  propertyToAction?.action === 'delete' || propertyToAction?.action === 'reject'
+                    ? 'bg-destructive hover:bg-destructive/90'
+                    : ''
+                }
+              >
+                {getActionButton()}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
         <Card>
           <CardHeader>
             <CardTitle>Properties Overview</CardTitle>
@@ -201,6 +337,7 @@ const AdminProperties = () => {
                     <TableHead>Type</TableHead>
                     <TableHead>Bedrooms</TableHead>
                     <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Amenities</TableHead>
                     <TableHead>Images</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -214,6 +351,7 @@ const AdminProperties = () => {
                       <TableCell>{property.type}</TableCell>
                       <TableCell>{property.bedrooms}</TableCell>
                       <TableCell>{formatPriceWithUnit(property.price, property.price_unit)}</TableCell>
+                      <TableCell>{getStatusBadge(property.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
                           {property.has_internet && <Badge variant="outline" className="bg-blue-50"><Wifi className="h-3 w-3 mr-1" /> WiFi</Badge>}
@@ -238,23 +376,60 @@ const AdminProperties = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit Property</DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="text-destructive"
-                              onClick={() => handleDeleteProperty(property.id)}
+                        <div className="flex justify-end space-x-2">
+                          {(!property.status || property.status === 'pending_approval') && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-green-600"
+                                onClick={() => handlePropertyAction(property, 'approve')}
+                                title="Approve"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-red-600"
+                                onClick={() => handlePropertyAction(property, 'reject')}
+                                title="Reject"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          
+                          {property.status === 'approved' && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-gray-600"
+                              onClick={() => handlePropertyAction(property, 'pull-off-market')}
+                              title="Pull off market"
                             >
-                              Delete Property
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <EyeOff className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Edit Property</DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handlePropertyAction(property, 'delete')}
+                              >
+                                Delete Property
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
