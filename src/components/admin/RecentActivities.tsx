@@ -212,7 +212,7 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      // Updated: Using type check to determine the table name AND updating the status field
+      // Using type check to determine the table name AND updating the status field
       if (selectedActivity.activity_type === 'property_added') {
         const { error } = await supabase
           .from('properties')
@@ -250,7 +250,7 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      // Updated: Using type check to determine the table name AND updating the status field
+      // Using type check to determine the table name AND updating the status field
       if (selectedActivity.activity_type === 'property_added') {
         const { error } = await supabase
           .from('properties')
@@ -397,6 +397,10 @@ export function RecentActivities() {
                 <p className="text-sm font-medium text-gray-500">Bathrooms</p>
                 <p>{details?.bathrooms}</p>
               </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Status</p>
+                <p>{details?.status || 'pending_approval'}</p>
+              </div>
             </div>
             
             {details?.images && details.images.length > 0 && (
@@ -447,6 +451,10 @@ export function RecentActivities() {
               <div>
                 <p className="text-sm font-medium text-gray-500">Fuel Type</p>
                 <p>{details?.fuel_type}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Status</p>
+                <p>{details?.status || 'pending_approval'}</p>
               </div>
             </div>
           </div>
@@ -583,175 +591,4 @@ export function RecentActivities() {
       </Drawer>
     </>
   );
-
-  function formatDateTime(dateString: string) {
-    try {
-      return format(new Date(dateString), 'yyyy-MM-dd hh:mm a');
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  function renderDrawerContent() {
-    if (!selectedActivity) return null;
-    
-    const isLoading = loadingDetails;
-    const details = entityDetails;
-    
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        {selectedActivity.activity_type === 'user_signup' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Name</p>
-                <p>{details?.first_name} {details?.last_name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Email</p>
-                <p>{selectedActivity.user_email}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Registered</p>
-                <p>{formatDateTime(selectedActivity.created_at)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Phone</p>
-                <p>{details?.phone || 'Not provided'}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {selectedActivity.activity_type === 'property_added' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Property Name</p>
-                <p>{details?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Location</p>
-                <p>{details?.location}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Price</p>
-                <p>Ksh {details?.price} / {details?.price_unit || 'night'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Type</p>
-                <p>{details?.type}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Bedrooms</p>
-                <p>{details?.bedrooms}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Bathrooms</p>
-                <p>{details?.bathrooms}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Status</p>
-                <p>{details?.status || 'pending_approval'}</p>
-              </div>
-            </div>
-            
-            {details?.images && details.images.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Images</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {details.images.slice(0, 3).map((img: string, i: number) => (
-                    <img 
-                      key={i} 
-                      src={img} 
-                      alt={`Property ${i+1}`}
-                      className="h-24 w-full object-cover rounded-md"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {selectedActivity.activity_type === 'vehicle_added' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Vehicle Name</p>
-                <p>{details?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Model</p>
-                <p>{details?.model}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Year</p>
-                <p>{details?.year}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Price per Day</p>
-                <p>Ksh {details?.price_per_day}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Seats</p>
-                <p>{details?.seats}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Transmission</p>
-                <p>{details?.transmission}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Fuel Type</p>
-                <p>{details?.fuel_type}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Status</p>
-                <p>{details?.status || 'pending_approval'}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {selectedActivity.activity_type === 'booking_completed' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Booking ID</p>
-                <p>{selectedActivity.entity_id}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Item Name</p>
-                <p>{details?.item_name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Start Date</p>
-                <p>{details?.start_date && format(new Date(details.start_date), 'PP')}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">End Date</p>
-                <p>{details?.end_date && format(new Date(details.end_date), 'PP')}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Amount</p>
-                <p>Ksh {details?.total_amount}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Payment Status</p>
-                <p>{details?.payment_status}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 }

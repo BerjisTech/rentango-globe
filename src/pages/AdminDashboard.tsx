@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -174,13 +175,13 @@ const AdminDashboard = () => {
         
         const { data: propertiesByOwner, error: propertiesError } = await supabase
           .from('properties')
-          .select('id');
+          .select('id, owner_id');
         
         if (propertiesError) throw propertiesError;
         
         const { data: vehiclesByOwner, error: vehiclesError } = await supabase
           .from('vehicles')
-          .select('id');
+          .select('id, owner_id');
         
         if (vehiclesError) throw vehiclesError;
         
@@ -214,7 +215,7 @@ const AdminDashboard = () => {
     enabled: activeTab === "users"
   });
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: 'KES',

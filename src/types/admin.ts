@@ -1,3 +1,4 @@
+
 // Common types for admin dashboard
 export interface Property {
   id: string;
@@ -34,6 +35,7 @@ export interface Vehicle {
   transmission: string;
   fuel_type: string;
   created_at: string;
+  status?: 'pending_approval' | 'approved' | 'rejected' | 'off_market';
 }
 
 export interface Booking {
