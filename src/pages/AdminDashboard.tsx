@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -36,15 +35,20 @@ import {
   LayoutDashboard,
   Flag,
   CreditCard,
-  Database 
+  Database,
+  Loader2 
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { RecentActivities } from "@/components/admin/RecentActivities";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { toast } = useToast();
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -59,6 +63,165 @@ const AdminDashboard = () => {
     { id: "reports", icon: <BarChart className="h-5 w-5" />, label: "Reports", path: "/admin-dashboard/reports" },
     { id: "settings", icon: <Settings className="h-5 w-5" />, label: "Settings", path: "/admin-dashboard/settings" },
   ];
+
+  const { data: statsData, isLoading: loadingStats } = useQuery({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: async () => {
+      try {
+        const { count: usersCount, error: usersError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true });
+        
+        if (usersError) throw usersError;
+        
+        const { count: propertiesCount, error: propertiesError } = await supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true });
+        
+        if (propertiesError) throw propertiesError;
+        
+        const { count: vehiclesCount, error: vehiclesError } = await supabase
+          .from('vehicles')
+          .select('id', { count: 'exact', head: true });
+        
+        if (vehiclesError) throw vehiclesError;
+        
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('total_amount');
+        
+        if (bookingsError) throw bookingsError;
+        
+        const totalRevenue = bookingsData.reduce((sum, booking) => {
+          return sum + (parseFloat(booking.total_amount) || 0);
+        }, 0);
+        
+        return {
+          usersCount: usersCount || 0,
+          propertiesCount: propertiesCount || 0,
+          vehiclesCount: vehiclesCount || 0,
+          totalRevenue: totalRevenue || 0
+        };
+      } catch (error) {
+        console.error('Error fetching admin dashboard stats:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading dashboard statistics",
+          description: "Could not fetch dashboard statistics. Please try again later."
+        });
+        return {
+          usersCount: 0,
+          propertiesCount: 0,
+          vehiclesCount: 0,
+          totalRevenue: 0
+        };
+      }
+    }
+  });
+
+  const { data: systemAlerts, isLoading: loadingAlerts } = useQuery({
+    queryKey: ['admin-dashboard-alerts'],
+    queryFn: async () => {
+      try {
+        const { data: pendingProperties, error: propertiesError } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('status', 'pending_approval');
+        
+        if (propertiesError) throw propertiesError;
+        
+        const { data: unresolvedBookings, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('payment_status', 'requires_action');
+        
+        if (bookingsError) throw bookingsError;
+        
+        return {
+          pendingPropertiesCount: pendingProperties?.length || 0,
+          unresolvedBookingsCount: unresolvedBookings?.length || 0
+        };
+      } catch (error) {
+        console.error('Error fetching system alerts:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading system alerts",
+          description: "Could not fetch system alerts. Please try again later."
+        });
+        return {
+          pendingPropertiesCount: 0,
+          unresolvedBookingsCount: 0
+        };
+      }
+    }
+  });
+
+  const { data: users, isLoading: loadingUsers } = useQuery({
+    queryKey: ['admin-dashboard-users'],
+    queryFn: async () => {
+      try {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url');
+        
+        if (profilesError) throw profilesError;
+        
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role');
+        
+        if (rolesError) throw rolesError;
+        
+        const { data: propertiesByOwner, error: propertiesError } = await supabase
+          .from('properties')
+          .select('id');
+        
+        if (propertiesError) throw propertiesError;
+        
+        const { data: vehiclesByOwner, error: vehiclesError } = await supabase
+          .from('vehicles')
+          .select('id');
+        
+        if (vehiclesError) throw vehiclesError;
+        
+        const combinedUsers = profilesData.map(profile => {
+          const userRoles = rolesData.filter(r => r.user_id === profile.id).map(r => r.role);
+          const userProperties = propertiesByOwner.filter(p => p.owner_id === profile.id).length;
+          const userVehicles = vehiclesByOwner.filter(v => v.owner_id === profile.id).length;
+          
+          return {
+            id: profile.id,
+            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown User',
+            email: 'user@example.com',
+            role: userRoles.length > 0 ? userRoles[0] : 'user',
+            properties: userProperties,
+            vehicles: userVehicles,
+            status: 'active'
+          };
+        });
+        
+        return combinedUsers;
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading users",
+          description: "Could not fetch user data. Please try again later."
+        });
+        return [];
+      }
+    },
+    enabled: activeTab === "users"
+  });
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -123,12 +286,19 @@ const AdminDashboard = () => {
                       <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center">
-                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
-                          <Users className="h-5 w-5" />
+                      {loadingStats ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-3" />
+                          <span className="text-muted-foreground">Loading...</span>
                         </div>
-                        <div className="text-2xl font-bold">1,248</div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div className="text-2xl font-bold">{statsData?.usersCount || 0}</div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   
@@ -137,12 +307,19 @@ const AdminDashboard = () => {
                       <CardTitle className="text-sm font-medium">Properties Listed</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center">
-                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
-                          <House className="h-5 w-5" />
+                      {loadingStats ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-3" />
+                          <span className="text-muted-foreground">Loading...</span>
                         </div>
-                        <div className="text-2xl font-bold">542</div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                            <House className="h-5 w-5" />
+                          </div>
+                          <div className="text-2xl font-bold">{statsData?.propertiesCount || 0}</div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   
@@ -151,12 +328,19 @@ const AdminDashboard = () => {
                       <CardTitle className="text-sm font-medium">Vehicles Listed</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center">
-                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
-                          <Car className="h-5 w-5" />
+                      {loadingStats ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-3" />
+                          <span className="text-muted-foreground">Loading...</span>
                         </div>
-                        <div className="text-2xl font-bold">178</div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                            <Car className="h-5 w-5" />
+                          </div>
+                          <div className="text-2xl font-bold">{statsData?.vehiclesCount || 0}</div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                   
@@ -165,12 +349,19 @@ const AdminDashboard = () => {
                       <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex items-center">
-                        <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
-                          <DollarSign className="h-5 w-5" />
+                      {loadingStats ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-3" />
+                          <span className="text-muted-foreground">Loading...</span>
                         </div>
-                        <div className="text-2xl font-bold">Ksh 9.4M</div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <div className="p-2 rounded-full bg-primary/10 text-primary mr-3">
+                            <DollarSign className="h-5 w-5" />
+                          </div>
+                          <div className="text-2xl font-bold">{formatCurrency(statsData?.totalRevenue || 0)}</div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -195,29 +386,57 @@ const AdminDashboard = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-yellow-400">
-                        <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
-                        <div>
-                          <p className="font-medium">5 properties require verification</p>
-                          <p className="text-sm text-gray-600">Recently uploaded properties need review before being listed</p>
-                        </div>
-                        <Button variant="outline" size="sm" className="ml-auto rounded-full">
-                          Review
-                        </Button>
+                    {loadingAlerts ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       </div>
-                      
-                      <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-red-400">
-                        <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
-                        <div>
-                          <p className="font-medium">3 reported issues need attention</p>
-                          <p className="text-sm text-gray-600">Users have reported issues with bookings that require immediate action</p>
-                        </div>
-                        <Button variant="outline" size="sm" className="ml-auto rounded-full">
-                          Resolve
-                        </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        {systemAlerts?.pendingPropertiesCount > 0 && (
+                          <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-yellow-400">
+                            <AlertTriangle className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
+                            <div>
+                              <p className="font-medium">{systemAlerts.pendingPropertiesCount} properties require verification</p>
+                              <p className="text-sm text-gray-600">Recently uploaded properties need review before being listed</p>
+                            </div>
+                            <Link to="/admin-dashboard/properties">
+                              <Button variant="outline" size="sm" className="ml-auto rounded-full">
+                                Review
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
+                        
+                        {systemAlerts?.unresolvedBookingsCount > 0 && (
+                          <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-red-400">
+                            <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
+                            <div>
+                              <p className="font-medium">{systemAlerts.unresolvedBookingsCount} reported issues need attention</p>
+                              <p className="text-sm text-gray-600">Users have reported issues with bookings that require immediate action</p>
+                            </div>
+                            <Link to="/admin-dashboard/bookings">
+                              <Button variant="outline" size="sm" className="ml-auto rounded-full">
+                                Resolve
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
+                        
+                        {systemAlerts?.pendingPropertiesCount === 0 && systemAlerts?.unresolvedBookingsCount === 0 && (
+                          <div className="glass-card rounded-xl p-4 flex items-start border-l-4 border-green-400">
+                            <div className="p-1 rounded-full bg-green-100 text-green-600 mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 6 9 17l-5-5" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium">All systems normal</p>
+                              <p className="text-sm text-gray-600">No alerts requiring attention at the moment</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -235,101 +454,72 @@ const AdminDashboard = () => {
                         className="pl-10 w-64 rounded-full"
                       />
                     </div>
-                    <Button className="rounded-full">Add User</Button>
+                    <Link to="/admin-dashboard/settings">
+                      <Button className="rounded-full">Add User</Button>
+                    </Link>
                   </div>
                 </div>
                 
                 <Card className="glass-card border-0 shadow-lg">
                   <CardContent className="p-0 overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Properties</TableHead>
-                          <TableHead>Vehicles</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">John Doe</TableCell>
-                          <TableCell>john.doe@example.com</TableCell>
-                          <TableCell>
-                            <span className="tag">Property Owner</span>
-                          </TableCell>
-                          <TableCell>5</TableCell>
-                          <TableCell>2</TableCell>
-                          <TableCell>
-                            <span className="tag bg-green-100 text-green-700">
-                              Active
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Jane Smith</TableCell>
-                          <TableCell>jane.smith@example.com</TableCell>
-                          <TableCell>
-                            <span className="tag">User</span>
-                          </TableCell>
-                          <TableCell>0</TableCell>
-                          <TableCell>0</TableCell>
-                          <TableCell>
-                            <span className="tag bg-green-100 text-green-700">
-                              Active
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Sam Johnson</TableCell>
-                          <TableCell>sam.johnson@example.com</TableCell>
-                          <TableCell>
-                            <span className="tag">Admin</span>
-                          </TableCell>
-                          <TableCell>0</TableCell>
-                          <TableCell>0</TableCell>
-                          <TableCell>
-                            <span className="tag bg-green-100 text-green-700">
-                              Active
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Mark Wilson</TableCell>
-                          <TableCell>mark.wilson@example.com</TableCell>
-                          <TableCell>
-                            <span className="tag">Property Owner</span>
-                          </TableCell>
-                          <TableCell>3</TableCell>
-                          <TableCell>1</TableCell>
-                          <TableCell>
-                            <span className="tag bg-gray-100 text-gray-700">
-                              Suspended
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                    {loadingUsers ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Properties</TableHead>
+                            <TableHead>Vehicles</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {users && users.length > 0 ? (
+                            users.map((user) => (
+                              <TableRow key={user.id}>
+                                <TableCell className="font-medium">{user.name}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>
+                                  <span className="tag bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+                                    {user.role === 'owner' ? 'Property Owner' : 
+                                     user.role === 'admin' ? 'Admin' : 
+                                     user.role === 'superadmin' ? 'Super Admin' : 'User'}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{user.properties}</TableCell>
+                                <TableCell>{user.vehicles}</TableCell>
+                                <TableCell>
+                                  <span className="tag bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+                                    {user.status}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <Button variant="outline" size="sm" className="rounded-full">Manage</Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-8">
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    )}
                   </CardContent>
                 </Card>
               </div>
             )}
             
-            {/* Add other tab contents as needed */}
+            {/* Keep other tab contents as they are */}
           </div>
         </div>
       </div>

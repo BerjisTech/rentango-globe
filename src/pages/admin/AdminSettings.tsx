@@ -11,10 +11,20 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/hooks/use-toast";
-import { Save, RefreshCw, Shield, Globe, Mail, Settings as SettingsIcon, Loader2 } from "lucide-react";
+import { Save, RefreshCw, Shield, Globe, Mail, Settings as SettingsIcon, Loader2, AlertTriangle } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { PlatformSettings, Settings } from "@/types/admin";
+import { PlatformSettings } from "@/types/admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Define form schema for general settings
 const generalSettingsSchema = z.object({
@@ -38,6 +48,8 @@ type SecuritySettingsFormValues = z.infer<typeof securitySettingsSchema>;
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState<"general" | "security" | "advanced">("general");
   const queryClient = useQueryClient();
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isMaintenanceModeDialogOpen, setIsMaintenanceModeDialogOpen] = useState(false);
   
   // General settings form
   const generalForm = useForm<GeneralSettingsFormValues>({
@@ -106,6 +118,9 @@ const AdminSettings = () => {
         contact_email: platformSettings.contact_email || "",
         support_phone: platformSettings.support_phone || ""
       });
+
+      // In a real app, you would also fetch and set the security settings
+      // For now, we'll keep the default values
     }
   }, [platformSettings, generalForm]);
 
@@ -155,7 +170,7 @@ const AdminSettings = () => {
   };
 
   const onSaveSecuritySettings = (data: SecuritySettingsFormValues) => {
-    // In a real app, these would be saved to a separate table or endpoint
+    // In a real app, these would be saved to a separate settings table or endpoint
     toast({
       title: "Security settings updated",
       description: "Your security changes have been saved successfully."
@@ -165,7 +180,9 @@ const AdminSettings = () => {
   // Handle cache clearing
   const clearCacheMutation = useMutation({
     mutationFn: async () => {
-      // Simulate cache clearing - in a real app, you'd call an API
+      // Simulate cache clearing by invalidating all queries
+      queryClient.invalidateQueries();
+      // Wait a bit to simulate processing
       await new Promise(resolve => setTimeout(resolve, 1500));
       return true;
     },
@@ -180,6 +197,97 @@ const AdminSettings = () => {
   const handleClearCache = () => {
     clearCacheMutation.mutate();
   };
+
+  // Reset settings mutation
+  const resetSettingsMutation = useMutation({
+    mutationFn: async () => {
+      if (!platformSettings?.id) return;
+      
+      const defaultSettings = {
+        site_name: "HomeNZoom",
+        site_description: "Book your ideal vacation home or vehicle with ease",
+        contact_email: "support@homenzoom.com",
+        support_phone: "+1-888-555-1234",
+        version: "1.0.0",
+        booking_fee_percentage: 5,
+        enable_instant_booking: true,
+        maintenance_mode: false
+      };
+      
+      const { error } = await supabase
+        .from("platform_settings")
+        .update(defaultSettings)
+        .eq("id", platformSettings.id);
+      
+      if (error) throw error;
+      
+      return defaultSettings;
+    },
+    onSuccess: (data) => {
+      // Update the form with reset values
+      if (data) {
+        generalForm.reset({
+          site_name: data.site_name,
+          site_description: data.site_description,
+          contact_email: data.contact_email,
+          support_phone: data.support_phone
+        });
+      }
+      
+      toast({
+        title: "Settings reset",
+        description: "All settings have been reset to default values."
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+      setIsResetDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error resetting settings",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setIsResetDialogOpen(false);
+    }
+  });
+
+  // Maintenance mode mutation
+  const maintenanceModeMutation = useMutation({
+    mutationFn: async () => {
+      if (!platformSettings?.id) return;
+      
+      const newMaintenanceMode = !platformSettings.maintenance_mode;
+      
+      const { error } = await supabase
+        .from("platform_settings")
+        .update({ maintenance_mode: newMaintenanceMode })
+        .eq("id", platformSettings.id);
+      
+      if (error) throw error;
+      
+      return newMaintenanceMode;
+    },
+    onSuccess: (newMode) => {
+      toast({
+        title: newMode ? "Maintenance Mode Enabled" : "Maintenance Mode Disabled",
+        description: newMode 
+          ? "The site is now in maintenance mode. Only admins can access it."
+          : "The site is now accessible to all users."
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+      setIsMaintenanceModeDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error changing maintenance mode",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setIsMaintenanceModeDialogOpen(false);
+    }
+  });
 
   return (
     <AdminLayout activeTab="settings">
@@ -407,8 +515,7 @@ const AdminSettings = () => {
                       </div>
                       
                       <div className="flex justify-end mt-6">
-                        <Button type="submit" disabled={updateSettingsMutation.isPending} className="flex items-center">
-                          {updateSettingsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button type="submit" className="flex items-center">
                           <Save className="mr-2 h-4 w-4" />
                           Save Security Settings
                         </Button>
@@ -456,21 +563,6 @@ const AdminSettings = () => {
                       </div>
                     </div>
                     
-                    <div className="rounded-lg border p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <h4 className="font-medium">Email Service</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Configure the platform email delivery service
-                          </p>
-                        </div>
-                        <Button variant="outline">
-                          <Mail className="mr-2 h-4 w-4" />
-                          Configure SMTP
-                        </Button>
-                      </div>
-                    </div>
-                    
                     <div className="rounded-lg border p-4 bg-amber-50 border-amber-200">
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -503,8 +595,17 @@ const AdminSettings = () => {
                             Reset the platform to default settings. This will not delete user data.
                           </p>
                         </div>
-                        <Button variant="outline" className="border-red-200 text-red-800 hover:bg-red-100">
-                          Reset Settings
+                        <Button 
+                          variant="outline" 
+                          className="border-red-200 text-red-800 hover:bg-red-100"
+                          onClick={() => setIsResetDialogOpen(true)}
+                          disabled={resetSettingsMutation.isPending}
+                        >
+                          {resetSettingsMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Reset Settings"
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -517,8 +618,15 @@ const AdminSettings = () => {
                             Put the platform in maintenance mode. Users will see a maintenance page.
                           </p>
                         </div>
-                        <Button variant="destructive">
-                          Enable Maintenance Mode
+                        <Button 
+                          variant="destructive"
+                          onClick={() => setIsMaintenanceModeDialogOpen(true)}
+                          disabled={maintenanceModeMutation.isPending}
+                        >
+                          {maintenanceModeMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          {platformSettings?.maintenance_mode ? "Disable" : "Enable"} Maintenance Mode
                         </Button>
                       </div>
                     </div>
@@ -529,6 +637,60 @@ const AdminSettings = () => {
           </>
         )}
       </div>
+
+      {/* Reset Settings Confirmation Dialog */}
+      <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Platform Settings?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset all platform settings to their default values. This action cannot be undone.
+              User data will not be affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={(e) => {
+                e.preventDefault();
+                resetSettingsMutation.mutate();
+              }}
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Reset Settings
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Maintenance Mode Confirmation Dialog */}
+      <AlertDialog open={isMaintenanceModeDialogOpen} onOpenChange={setIsMaintenanceModeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {platformSettings?.maintenance_mode ? "Disable" : "Enable"} Maintenance Mode?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {platformSettings?.maintenance_mode 
+                ? "This will make the platform accessible to all users again."
+                : "This will put the platform in maintenance mode. Only administrators will have access."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={platformSettings?.maintenance_mode ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}
+              onClick={(e) => {
+                e.preventDefault();
+                maintenanceModeMutation.mutate();
+              }}
+            >
+              {platformSettings?.maintenance_mode ? "Disable" : "Enable"} Maintenance Mode
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };

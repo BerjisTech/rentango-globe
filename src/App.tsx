@@ -20,50 +20,77 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
+import { supabase } from "./integrations/supabase/client";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1
+    }
+  }
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/property/:id" element={<PropertyDetails />} />
-            <Route path="/transportation" element={<Transportation />} />
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected routes - requires any authenticated user */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/profile" element={<Profile />} />
-            </Route>
-            
-            {/* Routes that require specific roles */}
-            <Route element={<ProtectedRoute allowedRoles={["owner", "admin", "superadmin"]} />}>
-              <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-            </Route>
-            
-            <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/admin-dashboard/properties" element={<AdminProperties />} />
-              <Route path="/admin-dashboard/transportation" element={<AdminTransportation />} />
-              <Route path="/admin-dashboard/bookings" element={<AdminBookings />} />
-              <Route path="/admin-dashboard/reports" element={<AdminReports />} />
-              <Route path="/admin-dashboard/settings" element={<AdminSettings />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Fetch site settings on app load
+  useEffect(() => {
+    async function fetchSiteSettings() {
+      const { data } = await supabase
+        .from('platform_settings')
+        .select('*')
+        .single();
+        
+      if (data?.site_name) {
+        document.title = data.site_name;
+      }
+    }
+    
+    fetchSiteSettings();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/property/:id" element={<PropertyDetails />} />
+              <Route path="/transportation" element={<Transportation />} />
+              <Route path="/login" element={<Login />} />
+              
+              {/* Protected routes - requires any authenticated user */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/profile" element={<Profile />} />
+              </Route>
+              
+              {/* Routes that require specific roles */}
+              <Route element={<ProtectedRoute allowedRoles={["owner", "admin", "superadmin"]} />}>
+                <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+              </Route>
+              
+              <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/admin-dashboard/properties" element={<AdminProperties />} />
+                <Route path="/admin-dashboard/transportation" element={<AdminTransportation />} />
+                <Route path="/admin-dashboard/bookings" element={<AdminBookings />} />
+                <Route path="/admin-dashboard/reports" element={<AdminReports />} />
+                <Route path="/admin-dashboard/settings" element={<AdminSettings />} />
+              </Route>
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

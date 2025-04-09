@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Calendar, Download, Filter, Info 
+  BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Calendar, Download, Filter, Info, Loader2 
 } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,12 +29,27 @@ import { toast } from "@/hooks/use-toast";
 import { Booking } from "@/types/admin";
 
 type TimeRange = "week" | "month" | "year";
+type ReportData = {
+  month: string;
+  properties: number;
+  vehicles: number;
+};
+
+type BookingDistribution = {
+  name: string;
+  value: number;
+};
+
+type MonthlyUserData = {
+  name: string;
+  users: number;
+};
 
 const AdminReports = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
   
   // Fetch bookings from Supabase
-  const { data: bookings, isLoading } = useQuery({
+  const { data: bookings, isLoading: loadingBookings } = useQuery({
     queryKey: ["reports-bookings", timeRange],
     queryFn: async () => {
       try {
@@ -63,33 +78,117 @@ const AdminReports = () => {
     }
   });
 
-  // Sample revenue data that would usually be calculated from bookings
-  const revenueData = [
-    { name: "Jan", properties: 4000, vehicles: 2400 },
-    { name: "Feb", properties: 3000, vehicles: 1398 },
-    { name: "Mar", properties: 2000, vehicles: 9800 },
-    { name: "Apr", properties: 2780, vehicles: 3908 },
-    { name: "May", properties: 1890, vehicles: 4800 },
-    { name: "Jun", properties: 2390, vehicles: 3800 },
-    { name: "Jul", properties: 3490, vehicles: 4300 },
-  ];
+  // Fetch property and vehicle counts
+  const { data: propertiesVehiclesData, isLoading: loadingPropertiesVehicles } = useQuery({
+    queryKey: ["reports-properties-vehicles", timeRange],
+    queryFn: async () => {
+      try {
+        // Get properties count
+        const { data: properties, error: propertiesError } = await supabase
+          .from('properties')
+          .select('created_at');
+          
+        if (propertiesError) throw propertiesError;
+        
+        // Get vehicles count
+        const { data: vehicles, error: vehiclesError } = await supabase
+          .from('vehicles')
+          .select('created_at');
+          
+        if (vehiclesError) throw vehiclesError;
 
-  // Sample booking distribution data
-  const bookingDistributionData = [
-    { name: "Properties", value: 60 },
-    { name: "Vehicles", value: 40 }
-  ];
+        // Process data for charts
+        const propertyMonths = processDataByMonth(properties || []);
+        const vehicleMonths = processDataByMonth(vehicles || []);
+        
+        // Get list of all months from both datasets
+        const allMonths = [...new Set([...Object.keys(propertyMonths), ...Object.keys(vehicleMonths)])].sort();
+        
+        // Create combined dataset for chart
+        const revenueData: ReportData[] = allMonths.map(month => ({
+          month,
+          properties: propertyMonths[month] || 0,
+          vehicles: vehicleMonths[month] || 0
+        }));
 
-  // Sample user growth data
-  const userGrowthData = [
-    { name: "Jan", users: 400 },
-    { name: "Feb", users: 600 },
-    { name: "Mar", users: 800 },
-    { name: "Apr", users: 1000 },
-    { name: "May", users: 1200 },
-    { name: "Jun", users: 1500 },
-    { name: "Jul", users: 2000 },
-  ];
+        // For pie chart - total distribution
+        const totalProperties = properties?.length || 0;
+        const totalVehicles = vehicles?.length || 0;
+        
+        const bookingDistributionData: BookingDistribution[] = [
+          { name: "Properties", value: totalProperties },
+          { name: "Vehicles", value: totalVehicles }
+        ];
+        
+        return { revenueData, bookingDistributionData };
+      } catch (error: any) {
+        toast({
+          title: "Error fetching properties/vehicles data",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive"
+        });
+        
+        return { 
+          revenueData: [], 
+          bookingDistributionData: [
+            { name: "Properties", value: 0 },
+            { name: "Vehicles", value: 0 }
+          ]
+        };
+      }
+    }
+  });
+
+  // Fetch user growth data
+  const { data: userGrowthData, isLoading: loadingUserGrowth } = useQuery({
+    queryKey: ["reports-user-growth", timeRange],
+    queryFn: async () => {
+      try {
+        const { data: users, error } = await supabase
+          .from('profiles')
+          .select('created_at');
+          
+        if (error) throw error;
+        
+        // Process user data by month
+        const userMonths = processDataByMonth(users || []);
+        
+        // Convert to array format for chart
+        const monthlyUserData: MonthlyUserData[] = Object.entries(userMonths)
+          .map(([month, count]) => ({ name: month, users: count }))
+          .sort((a, b) => {
+            // Sort by month
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return months.indexOf(a.name) - months.indexOf(b.name);
+          });
+          
+        return monthlyUserData;
+      } catch (error: any) {
+        toast({
+          title: "Error fetching user growth data",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive"
+        });
+        return [];
+      }
+    }
+  });
+
+  // Helper function to process data by month
+  function processDataByMonth(data: any[]) {
+    const months: Record<string, number> = {};
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    data.forEach(item => {
+      if (item.created_at) {
+        const date = new Date(item.created_at);
+        const monthName = monthNames[date.getMonth()];
+        months[monthName] = (months[monthName] || 0) + 1;
+      }
+    });
+    
+    return months;
+  }
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -102,13 +201,53 @@ const AdminReports = () => {
     }
   };
 
-  // Function to download reports - in a real app, this would generate actual reports
+  // Function to download reports
   const handleDownloadReport = () => {
+    // Generate the report data
+    let reportData: string;
+    let filename: string;
+    
+    // Based on the active tab
+    const activeTab = document.querySelector('[role="tablist"] [data-state="active"]')?.getAttribute('value') || 'revenue';
+    
+    if (activeTab === 'revenue') {
+      // Revenue report
+      reportData = 'Month,Properties,Vehicles\n';
+      propertiesVehiclesData?.revenueData.forEach(item => {
+        reportData += `${item.month},${item.properties},${item.vehicles}\n`;
+      });
+      filename = 'revenue-report.csv';
+    } else if (activeTab === 'bookings') {
+      // Bookings report
+      reportData = 'ID,Item Name,Start Date,End Date,Total Amount,Payment Status\n';
+      bookings?.forEach(booking => {
+        reportData += `${booking.id},${booking.item_name},${booking.start_date},${booking.end_date},${booking.total_amount},${booking.payment_status}\n`;
+      });
+      filename = 'bookings-report.csv';
+    } else {
+      // User growth report
+      reportData = 'Month,New Users\n';
+      userGrowthData?.forEach(item => {
+        reportData += `${item.name},${item.users}\n`;
+      });
+      filename = 'user-growth-report.csv';
+    }
+    
+    // Create a blob and download it
+    const blob = new Blob([reportData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
     toast({
-      title: "Report Download Started",
-      description: "Your report is being generated and will download shortly."
+      title: "Report Downloaded",
+      description: `Your ${activeTab} report has been downloaded successfully.`
     });
-    // Actual download logic would go here
   };
 
   return (
@@ -157,17 +296,23 @@ const AdminReports = () => {
                 <CardDescription>Total revenue generated from properties and vehicles</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="properties" fill="#8884d8" name="Properties" />
-                    <Bar dataKey="vehicles" fill="#82ca9d" name="Vehicles" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {loadingPropertiesVehicles ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={propertiesVehiclesData?.revenueData || []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="properties" fill="#8884d8" name="Properties" />
+                      <Bar dataKey="vehicles" fill="#82ca9d" name="Vehicles" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
             
@@ -177,26 +322,32 @@ const AdminReports = () => {
                 <CardDescription>Distribution of revenue between properties and vehicles</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={bookingDistributionData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      label
-                    >
-                      {bookingDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                {loadingPropertiesVehicles ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={propertiesVehiclesData?.bookingDistributionData || []}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        label
+                      >
+                        {propertiesVehiclesData?.bookingDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -208,17 +359,27 @@ const AdminReports = () => {
                 <CardDescription>Number of bookings over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="properties" stroke="#8884d8" name="Properties Bookings" />
-                    <Line type="monotone" dataKey="vehicles" stroke="#82ca9d" name="Vehicles Bookings" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {loadingBookings ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : bookings && bookings.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={processBookingData(bookings)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="count" stroke="#8884d8" name="Bookings" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                    <Info className="h-12 w-12 mb-2" />
+                    <p>No booking data available</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -230,15 +391,27 @@ const AdminReports = () => {
                 <CardDescription>Number of new users over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={userGrowthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="users" stroke="#8884d8" name="New Users" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {loadingUserGrowth ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : userGrowthData && userGrowthData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={userGrowthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="users" stroke="#8884d8" name="New Users" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                    <Info className="h-12 w-12 mb-2" />
+                    <p>No user growth data available</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -246,6 +419,23 @@ const AdminReports = () => {
       </div>
     </AdminLayout>
   );
+  
+  // Helper function to process booking data for charts
+  function processBookingData(bookings: Booking[]) {
+    // Group bookings by date
+    const bookingsByDate: Record<string, number> = {};
+    
+    bookings.forEach(booking => {
+      const date = new Date(booking.created_at).toLocaleDateString();
+      bookingsByDate[date] = (bookingsByDate[date] || 0) + 1;
+    });
+    
+    // Convert to array for chart
+    return Object.entries(bookingsByDate).map(([date, count]) => ({
+      date,
+      count
+    }));
+  }
 };
 
 export default AdminReports;
