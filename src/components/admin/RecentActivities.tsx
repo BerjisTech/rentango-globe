@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -74,7 +73,7 @@ export function RecentActivities() {
       
       const { data: vehicles, error: vehiclesError } = await supabase
         .from('vehicles')
-        .select('id, created_at, name')
+        .select('id, created_at, name, status')
         .order('created_at', { ascending: false })
         .limit(1);
         
@@ -114,7 +113,9 @@ export function RecentActivities() {
           activity_type: 'vehicle_added' as const,
           entity_name: vehicle.name,
           entity_id: vehicle.id,
-          status: 'pending_approval' as const
+          status: (vehicle.status === 'pending_approval' ? 'pending_approval' : 
+                   vehicle.status === 'approved' ? 'verified' : 
+                   vehicle.status === 'rejected' ? 'requires_action' : 'pending_approval') as Activity['status']
         })) || []),
         
         ...(bookings?.map(booking => ({

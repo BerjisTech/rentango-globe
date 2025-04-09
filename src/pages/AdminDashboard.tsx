@@ -93,8 +93,9 @@ const AdminDashboard = () => {
         
         if (bookingsError) throw bookingsError;
         
+        // Convert total_amount to number before summing
         const totalRevenue = bookingsData.reduce((sum, booking) => {
-          return sum + (parseFloat(booking.total_amount) || 0);
+          return sum + (Number(booking.total_amount) || 0);
         }, 0);
         
         return {
@@ -173,30 +174,31 @@ const AdminDashboard = () => {
         
         if (rolesError) throw rolesError;
         
-        const { data: propertiesByOwner, error: propertiesError } = await supabase
+        // Get properties and vehicles, but don't try to access owner_id since it doesn't exist
+        const { data: propertiesData, error: propertiesError } = await supabase
           .from('properties')
-          .select('id, owner_id');
+          .select('id');
         
         if (propertiesError) throw propertiesError;
         
-        const { data: vehiclesByOwner, error: vehiclesError } = await supabase
+        const { data: vehiclesData, error: vehiclesError } = await supabase
           .from('vehicles')
-          .select('id, owner_id');
+          .select('id');
         
         if (vehiclesError) throw vehiclesError;
         
+        // Since we don't have owner relationships in the database, we'll just show
+        // zero counts for properties and vehicles owned
         const combinedUsers = profilesData.map(profile => {
           const userRoles = rolesData.filter(r => r.user_id === profile.id).map(r => r.role);
-          const userProperties = propertiesByOwner.filter(p => p.owner_id === profile.id).length;
-          const userVehicles = vehiclesByOwner.filter(v => v.owner_id === profile.id).length;
           
           return {
             id: profile.id,
             name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown User',
             email: 'user@example.com',
             role: userRoles.length > 0 ? userRoles[0] : 'user',
-            properties: userProperties,
-            vehicles: userVehicles,
+            properties: 0, // No owner_id relationship
+            vehicles: 0,   // No owner_id relationship
             status: 'active'
           };
         });
