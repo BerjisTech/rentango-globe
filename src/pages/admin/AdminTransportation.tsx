@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import AdminLayout from "@/components/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from "@/types/admin";
 
-// Define the form schema
 const vehicleFormSchema = z.object({
   name: z.string().min(3, "Vehicle name must be at least 3 characters"),
   model: z.string().min(2, "Model must be at least 2 characters"),
@@ -46,7 +44,6 @@ const AdminTransportation = () => {
     }
   });
 
-  // Fetch vehicles from Supabase
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ["vehicles"],
     queryFn: async () => {
@@ -65,7 +62,10 @@ const AdminTransportation = () => {
           return [];
         }
         
-        return data as Vehicle[];
+        return data.map((vehicle: Vehicle) => ({
+          ...vehicle,
+          status: vehicle.status || 'pending_approval'
+        })) as Vehicle[];
       } catch (error: any) {
         toast({
           title: "Error fetching vehicles",
@@ -77,11 +77,9 @@ const AdminTransportation = () => {
     }
   });
 
-  // Create a mutation for adding vehicles
   const addVehicleMutation = useMutation({
     mutationFn: async (values: VehicleFormValues) => {
       try {
-        // Make sure all required fields are provided
         const vehicleData = {
           name: values.name,
           model: values.model,
@@ -125,7 +123,6 @@ const AdminTransportation = () => {
     addVehicleMutation.mutate(values);
   };
 
-  // Filter vehicles based on search query
   const filteredVehicles = vehicles?.filter(vehicle => 
     vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     vehicle.model.toLowerCase().includes(searchQuery.toLowerCase()) ||

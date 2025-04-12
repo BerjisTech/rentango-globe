@@ -21,6 +21,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Check, X, Eye } from "lucide-react";
+import { Vehicle } from "@/types/admin";
 
 type Activity = {
   id: string;
@@ -113,7 +114,7 @@ export function RecentActivities() {
           activity_type: 'vehicle_added' as const,
           entity_name: vehicle.name,
           entity_id: vehicle.id,
-          status: vehicle.status || 'pending_approval'
+          status: 'pending_approval' as Activity['status']
         })) || []),
         
         ...(bookings?.map(booking => ({
@@ -182,7 +183,7 @@ export function RecentActivities() {
           if (vehicleError) throw vehicleError;
           details = {
             ...vehicleData,
-            status: vehicleData.status || 'pending_approval'
+            status: 'pending_approval'
           };
           break;
           

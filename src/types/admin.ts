@@ -1,4 +1,3 @@
-
 // Common types for admin dashboard
 export interface Property {
   id: string;
