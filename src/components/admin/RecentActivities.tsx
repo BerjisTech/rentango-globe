@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -72,7 +71,6 @@ export function RecentActivities() {
         
       if (propertiesError) throw propertiesError;
       
-      // We don't select status since it doesn't exist in vehicles table
       const { data: vehicles, error: vehiclesError } = await supabase
         .from('vehicles')
         .select('id, created_at, name')
@@ -115,8 +113,7 @@ export function RecentActivities() {
           activity_type: 'vehicle_added' as const,
           entity_name: vehicle.name,
           entity_id: vehicle.id,
-          // Since we don't have the status field, we'll default to pending_approval
-          status: 'pending_approval' as Activity['status']
+          status: vehicle.status || 'pending_approval'
         })) || []),
         
         ...(bookings?.map(booking => ({
@@ -183,10 +180,9 @@ export function RecentActivities() {
             .single();
           
           if (vehicleError) throw vehicleError;
-          // Add a default status since it might not exist in the database
           details = {
             ...vehicleData,
-            status: 'pending_approval' // Add default status
+            status: vehicleData.status || 'pending_approval'
           };
           break;
           
@@ -218,7 +214,6 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      // Using type check to determine the table name AND updating the status field
       if (selectedActivity.activity_type === 'property_added') {
         const { error } = await supabase
           .from('properties')
@@ -227,21 +222,19 @@ export function RecentActivities() {
         
         if (error) throw error;
       } else if (selectedActivity.activity_type === 'vehicle_added') {
-        // For vehicles, we'll first try to update the status
-        // This might fail if the column doesn't exist
         try {
+          const updateData: Partial<Vehicle> = { status: 'approved' };
+          
           const { error } = await supabase
             .from('vehicles')
-            .update({ status: 'approved' })
+            .update(updateData)
             .eq('id', selectedActivity.entity_id);
           
           if (error) {
             console.warn("Could not update vehicle status - status column might be missing");
-            // We'll continue without updating status
           }
         } catch (error) {
           console.warn("Error updating vehicle status:", error);
-          // Continue without failing the whole operation
         }
       } else {
         return;
@@ -266,7 +259,6 @@ export function RecentActivities() {
     if (!selectedActivity || !selectedActivity.entity_id) return;
     
     try {
-      // Using type check to determine the table name AND updating the status field
       if (selectedActivity.activity_type === 'property_added') {
         const { error } = await supabase
           .from('properties')
@@ -275,21 +267,19 @@ export function RecentActivities() {
         
         if (error) throw error;
       } else if (selectedActivity.activity_type === 'vehicle_added') {
-        // For vehicles, we'll first try to update the status
-        // This might fail if the column doesn't exist
         try {
+          const updateData: Partial<Vehicle> = { status: 'rejected' };
+          
           const { error } = await supabase
             .from('vehicles')
-            .update({ status: 'rejected' })
+            .update(updateData)
             .eq('id', selectedActivity.entity_id);
           
           if (error) {
             console.warn("Could not update vehicle status - status column might be missing");
-            // We'll continue without updating status
           }
         } catch (error) {
           console.warn("Error updating vehicle status:", error);
-          // Continue without failing the whole operation
         }
       } else {
         return;
